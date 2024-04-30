@@ -5,6 +5,13 @@
 #include "../path.h"
 
 typedef struct {
+    int icon;
+    char lgp[256];
+    HEADER_DESC desc;
+} TAB_HEADER;
+
+typedef struct {
+    TAB_HEADER header;
     PATH *path;
     SIE_FILE *files;
 } TAB_DATA;
@@ -12,16 +19,18 @@ typedef struct {
 const char LGP_BACK[] = "Back";
 const char LGP_QUIT[] = "Quit";
 
-static const int SK[] = {0,1,2};
+static HEADER_DESC HEADER_D={{0, 0, 0, 0}, NULL, LGP_NULL, LGP_NULL};
 
-static SOFTKEY_DESC SK_DESC[] = {
+static const int SOFTKEYS[] = {0, 1, 2};
+
+static SOFTKEY_DESC SOFTKEY_D[] = {
         {0x0018, 0x0000, (int)"Options"},
         {0x0001, 0x0000, (int)LGP_QUIT},
         {0x003D, 0x0000, (int)LGP_DOIT_PIC},
 };
 
-static const SOFTKEYSTAB SK_TAB = {
-        SK_DESC, 0,
+static const SOFTKEYSTAB SOFTKEYS_TAB = {
+        SOFTKEY_D, 0,
 };
 
 void Navigate(GUI *tab_gui, const char *path, int item_n) {
@@ -39,7 +48,13 @@ void Navigate(GUI *tab_gui, const char *path, int item_n) {
     }
     Menu_SetItemCountDyn(tab_gui, (int)items_count);
     UpdateMenuCursorItem(tab_gui, item_n);
+    RefreshGUI();
     mfree(mask);
+}
+
+void UpdateHeader(GUI *tab_gui) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+    sprintf(tab_data->header.lgp, "%s\\", tab_data->path->path);
 }
 
 static int OnKey(GUI *gui, GUI_MSG *msg) {
@@ -70,13 +85,14 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
 }
 
 static void GHook(GUI *gui, int cmd) {
-    TAB_DATA *gui_data = MenuGetUserPointer(gui);
+    TAB_DATA *tab_data = MenuGetUserPointer(gui);
     if (cmd == TI_CMD_REDRAW) {
-        SK_DESC[1].lgp_id = (gui_data->path->prev) ? (int)LGP_BACK : (int)LGP_QUIT;
+        UpdateHeader(gui);
+        SOFTKEY_D[1].lgp_id = (tab_data->path->prev) ? (int)LGP_BACK : (int)LGP_QUIT;
     } else if (cmd == TI_CMD_DESTROY) {
-        Sie_FS_DestroyFiles(gui_data->files);
-        Path_Destroy(gui_data->path);
-        mfree(gui_data);
+        Sie_FS_DestroyFiles(tab_data->files);
+        Path_Destroy(tab_data->path);
+        mfree(tab_data);
     }
 }
 
@@ -97,8 +113,8 @@ static const MENU_DESC DESC = {
         OnKey,
         GHook,
         Locret,
-        SK,
-        &SK_TAB,
+        SOFTKEYS,
+        &SOFTKEYS_TAB,
         0x10,
         ItemProc,
         NULL,
@@ -106,18 +122,33 @@ static const MENU_DESC DESC = {
 };
 
 void *CreateTabGUI(int tab_n) {
-    void *gui = GetMenuGUI(malloc_adr(), mfree_adr());
-    SetMenuToGUI(gui, &DESC);
+    TAB_DATA *tab_data = malloc(sizeof(TAB_DATA));
+    HEADER_DESC *header_desc = &(tab_data->header.desc);
+
+    zeromem(tab_data, sizeof(TAB_DATA));
+    memcpy(header_desc, &HEADER_D, sizeof(HEADER_DESC));
+    header_desc->icon = &(tab_data->header.icon);
+    header_desc->lgp_id = (int)tab_data->header.lgp;
+
+    GUI *tab_gui = GetMenuGUI(malloc_adr(), mfree_adr());
+    Sie_GUI_PatchHeader(header_desc);
+#ifdef ELKA
+    tab_data->header.icon = 951;
+#endif
+
+    SetHeaderToMenu(tab_gui, header_desc, malloc_adr());
+    SetMenuToGUI(tab_gui, &DESC);
 
     char str[32];
-    TAB_DATA *gui_data = malloc(sizeof(TAB_DATA));
-    zeromem(gui_data, sizeof(TAB_DATA));
     sprintf(str, "%d:", (tab_n < 3) ? tab_n : 4);
-    gui_data->path = Path_Push(NULL, str, 0);
-    sprintf(str, "%s\\*", gui_data->path->path);
-    gui_data->files = Sie_FS_FindFiles(str);
-    SetMenuItemCount(gui, (int)Sie_FS_GetFilesCount(gui_data->files));
+    tab_data->path = Path_Push(NULL, str, 0);
+    strcpy(tab_data->header.lgp, tab_data->path->path);
+    sprintf(str, "%s\\*", tab_data->path->path);
+    tab_data->files = Sie_FS_FindFiles(str);
+    SetMenuItemCount(tab_gui, (int)Sie_FS_GetFilesCount(tab_data->files));
 
-    MenuSetUserPointer(gui, gui_data);
-    return gui;
+    MenuSetUserPointer(tab_gui, tab_data);
+    UpdateHeader(tab_gui);
+
+    return tab_gui;
 }
