@@ -4,6 +4,12 @@
 #include <string.h>
 #include "../path.h"
 
+#ifdef ELKA
+    #define ICON_DIR   963
+    #define ICON_UNK   1002
+    #define ICON_BLANK 1336
+#endif
+
 typedef struct {
     int icon;
     char lgp[256];
@@ -14,12 +20,15 @@ typedef struct {
     TAB_HEADER header;
     PATH *path;
     SIE_FILE *files;
+    int items_count;
 } TAB_DATA;
 
 const char LGP_BACK[] = "Back";
 const char LGP_QUIT[] = "Quit";
 
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, NULL, LGP_NULL, LGP_NULL};
+
+static int ICONS_DEFAULT[] = { ICON_DIR, ICON_UNK, ICON_BLANK};
 
 static const int SOFTKEYS[] = {0, 1, 2};
 
@@ -39,6 +48,7 @@ void Navigate(GUI *tab_gui, const char *path, int item_n) {
     char *mask = malloc(strlen(path) + 2 + 1);
     sprintf(mask, "%s\\*", path);
     SIE_FILE *files = Sie_FS_FindFiles(mask);
+    files = Sie_FS_SortFilesByNameAsc(files, 1);
     if (files) {
         Sie_FS_DestroyFiles(tab_data->files);
         tab_data->files = files;
@@ -48,7 +58,6 @@ void Navigate(GUI *tab_gui, const char *path, int item_n) {
     }
     Menu_SetItemCountDyn(tab_gui, (int)items_count);
     UpdateMenuCursorItem(tab_gui, item_n);
-    RefreshGUI();
     mfree(mask);
 }
 
@@ -100,11 +109,34 @@ static void Locret() {}
 
 static void ItemProc(void *gui, int item_n, void *data) {
     void *item = AllocMenuItem(gui);
-    TAB_DATA *gui_data = (TAB_DATA*)data;
+    TAB_DATA *tab_data = (TAB_DATA*)data;
 
     WSHDR *ws = AllocMenuWS(gui, 256);
-    SIE_FILE *file = Sie_FS_GetFileByID(gui_data->files, item_n);
+    SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
     str_2ws(ws, file->file_name, 255);
+
+    if (!(file->file_attr & SIE_FS_FA_DIRECTORY)) {
+        int uid = GetExtUidByFileName_ws(ws);
+        TREGEXPLEXT *reg_expl_ext = get_regextpnt_by_uid(uid);
+        if (reg_expl_ext && strlen(reg_expl_ext->ext)) {
+            int *icon = (int *)(reg_expl_ext->icon1);
+            if (*icon > 0 && *icon < 3000) {
+                SetMenuItemIconArray(gui, item, icon);
+            }
+            else if (strlen((const char*)*icon)) {
+                char *ext = Sie_Ext_GetExtByFileName((const char*)*icon);
+                if (strcmp(ext, "png") == 0) {
+                    SetMenuItemIconArray(gui, item, icon);
+                }
+            } else {
+                SetMenuItemIconArray(gui, item, &ICONS_DEFAULT[2]); // blank
+            }
+        } else {
+            SetMenuItemIconArray(gui, item, &ICONS_DEFAULT[1]); // unknown
+        }
+    } else {
+        SetMenuItemIconArray(gui, item, ICONS_DEFAULT); // dir
+    }
     SetMenuItemText(gui, item, ws, item_n);
 }
 
@@ -115,10 +147,10 @@ static const MENU_DESC DESC = {
         Locret,
         SOFTKEYS,
         &SOFTKEYS_TAB,
-        0x10,
+        0x11,
         ItemProc,
         NULL,
-        0
+        NULL,
 };
 
 void *CreateTabGUI(int tab_n) {
@@ -145,7 +177,10 @@ void *CreateTabGUI(int tab_n) {
     strcpy(tab_data->header.lgp, tab_data->path->path);
     sprintf(str, "%s\\*", tab_data->path->path);
     tab_data->files = Sie_FS_FindFiles(str);
-    SetMenuItemCount(tab_gui, (int)Sie_FS_GetFilesCount(tab_data->files));
+    tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
+    unsigned int count = Sie_FS_GetFilesCount(tab_data->files);
+    SetMenuItemCount(tab_gui, (int)count);
+    tab_data->items_count = count;
 
     MenuSetUserPointer(tab_gui, tab_data);
     UpdateHeader(tab_gui);
