@@ -2,13 +2,9 @@
 #include <sie/sie.h>
 #include <stdlib.h>
 #include <string.h>
+#include "icons.h"
+#include "menu/options.h"
 #include "../path.h"
-
-#ifdef ELKA
-    #define ICON_DIR   963
-    #define ICON_UNK   1002
-    #define ICON_BLANK 1336
-#endif
 
 typedef struct {
     HEADER_DESC header_desc;
@@ -16,13 +12,15 @@ typedef struct {
     SIE_FILE *files;
 } TAB_DATA;
 
+extern SIE_GUI_STACK *GUI_STACK;
+
 const char LGP_BACK[] = "Back";
 const char LGP_QUIT[] = "Quit";
 
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
 
-static int ICONS_DEFAULT[] = { ICON_DIR, ICON_UNK, ICON_BLANK};
+static const int ICONS[] = {ICON_DIR, ICON_UNK, ICON_BLANK};
 
 static const int SOFTKEYS[] = {0, 1, 2};
 
@@ -67,17 +65,10 @@ void UpdateHeader(GUI *tab_gui) {
 static int OnKey(GUI *gui, GUI_MSG *msg) {
     TAB_DATA *tab_data = (TAB_DATA*)MenuGetUserPointer(gui);
     int item_n = GetCurMenuItem(gui);
-    if (msg->keys == 0x01) {
-        if (tab_data->path->prev) {
-            PATH *path = Path_Pop(tab_data->path);
-            tab_data->path = path;
-            Navigate(gui, tab_data->path->path, tab_data->path->item_n);
-            return -1;
-        } else {
-            return 1;
-        }
-    }
-    else if (msg->keys == 0x3D) {
+
+    if (msg->keys == 0x18) { // options
+        GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Options());
+    } else if (msg->keys == 0x3D) { // enter
         SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
         if (file) {
             if (file->file_attr & SIE_FS_FA_DIRECTORY) {
@@ -86,6 +77,15 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
                 mfree(path);
                 Navigate(gui, tab_data->path->path, 0);
             }
+        }
+    } else if (msg->keys == 0x01) { // back
+        if (tab_data->path->prev) {
+            PATH *path = Path_Pop(tab_data->path);
+            tab_data->path = path;
+            Navigate(gui, tab_data->path->path, tab_data->path->item_n);
+            return -1;
+        } else {
+            return 1;
         }
     }
     return 0;
@@ -106,9 +106,9 @@ static void GHook(GUI *gui, int cmd) {
 static void Locret() {}
 
 static void ItemProc(void *gui, int item_n, void *data) {
-    void *item = AllocMenuItem(gui);
     TAB_DATA *tab_data = (TAB_DATA*)data;
 
+    void *item = AllocMenuItem(gui);
     WSHDR *ws = AllocMenuWS(gui, 256);
     SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
     str_2ws(ws, file->file_name, 255);
@@ -127,13 +127,13 @@ static void ItemProc(void *gui, int item_n, void *data) {
                     SetMenuItemIconArray(gui, item, icon);
                 }
             } else {
-                SetMenuItemIconArray(gui, item, &ICONS_DEFAULT[2]); // blank
+                SetMenuItemIconArray(gui, item, &ICONS[2]); // blank
             }
         } else {
-            SetMenuItemIconArray(gui, item, &ICONS_DEFAULT[1]); // unknown
+            SetMenuItemIconArray(gui, item, &ICONS[1]); // unknown
         }
     } else {
-        SetMenuItemIconArray(gui, item, ICONS_DEFAULT); // dir
+        SetMenuItemIconArray(gui, item, ICONS); // dir
     }
     SetMenuItemText(gui, item, ws, item_n);
 }
@@ -145,7 +145,7 @@ static const MENU_DESC DESC = {
         Locret,
         SOFTKEYS,
         &SOFTKEYS_TAB,
-        0x11,
+        MENU_FLAGS_ENABLE_TEXT_SCROLLING | MENU_FLAGS_ENABLE_ICONS,
         ItemProc,
         NULL,
         NULL,
@@ -158,7 +158,7 @@ void *CreateTabGUI(int tab_n) {
     memcpy(header_desc, &HEADER_D, sizeof(HEADER_DESC));
 
     GUI *tab_gui = GetMenuGUI(malloc_adr(), mfree_adr());
-    Sie_GUI_PatchHeader(header_desc);
+    Sie_GUI_InitHeader(header_desc);
 
     SetHeaderToMenu(tab_gui, header_desc, malloc_adr());
     SetMenuToGUI(tab_gui, &DESC);

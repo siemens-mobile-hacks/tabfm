@@ -1,13 +1,13 @@
 #include <swilib.h>
 #include <string.h>
+#include <sie/sie.h>
 #include "tab.h"
+#include "icons.h"
 
-#ifdef ELKA
-    #define ICON_DISK 1019
-    #define ICON_MMC  1021
-#endif
+extern int MAIN_GUI_ID;
+extern SIE_GUI_STACK *GUI_STACK;
 
-int ICONS[][4] = {
+static const int ICONS[][4] = {
         {0, 0, 0, ICON_DISK},
         {0, 0, 0, ICON_DISK},
         {0, 0, 0, ICON_DISK},
@@ -27,13 +27,11 @@ static void GHook(GUI *gui, int cmd) {
     }
 }
 
-static void Locret() {}
-
 const TABGUI_DESC TABGUI_D = {
         8,
         OnKey,
         GHook,
-        Locret,
+        NULL,
         NULL,
         NULL,
 };
@@ -47,4 +45,8 @@ int CreateMainGUI() {
     }
     UpdateTab1stItem(tab_gui, 0);
     return CreateGUI(tab_gui);
+}
+
+void CloseChildrenGUI() {
+    GUI_STACK = Sie_GUI_Stack_CloseChildren(GUI_STACK, MAIN_GUI_ID);
 }

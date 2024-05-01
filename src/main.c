@@ -1,4 +1,5 @@
 #include <swilib.h>
+#include <sie/sie.h>
 #include "gui/gui.h"
 
 typedef struct {
@@ -9,14 +10,19 @@ typedef struct {
 static const int minus11 = -11;
 static unsigned short maincsm_name_body[140];
 
+int MAIN_GUI_ID;
+SIE_GUI_STACK *GUI_STACK;
+
 static void maincsm_oncreate(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     csm->csm.state = 0;
     csm->csm.unk1 = 0;
-    csm->gui_id = CreateMainGUI();
+    MAIN_GUI_ID = csm->gui_id = CreateMainGUI();
+    GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, MAIN_GUI_ID);
 }
 
 static void maincsm_onclose(CSM_RAM *csm) {
+    Sie_GUI_Stack_Destroy(GUI_STACK);
     SUBPROC((void *)kill_elf);
 }
 
