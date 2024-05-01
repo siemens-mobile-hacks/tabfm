@@ -11,22 +11,16 @@
 #endif
 
 typedef struct {
-    int icon;
-    char lgp[256];
-    HEADER_DESC desc;
-} TAB_HEADER;
-
-typedef struct {
-    TAB_HEADER header;
+    HEADER_DESC header_desc;
     PATH *path;
     SIE_FILE *files;
-    int items_count;
 } TAB_DATA;
 
 const char LGP_BACK[] = "Back";
 const char LGP_QUIT[] = "Quit";
 
-static HEADER_DESC HEADER_D={{0, 0, 0, 0}, NULL, LGP_NULL, LGP_NULL};
+static int ICON_HEADER = 951;
+static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
 
 static int ICONS_DEFAULT[] = { ICON_DIR, ICON_UNK, ICON_BLANK};
 
@@ -63,7 +57,11 @@ void Navigate(GUI *tab_gui, const char *path, int item_n) {
 
 void UpdateHeader(GUI *tab_gui) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-    sprintf(tab_data->header.lgp, "%s\\", tab_data->path->path);
+
+    WSHDR *ws = AllocWS(256);
+    str_2ws(ws, tab_data->path->path, 255);
+    wsAppendChar(ws, '\\');
+    SetHeaderText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
 }
 
 static int OnKey(GUI *gui, GUI_MSG *msg) {
@@ -155,18 +153,12 @@ static const MENU_DESC DESC = {
 
 void *CreateTabGUI(int tab_n) {
     TAB_DATA *tab_data = malloc(sizeof(TAB_DATA));
-    HEADER_DESC *header_desc = &(tab_data->header.desc);
-
+    HEADER_DESC *header_desc = &(tab_data->header_desc);
     zeromem(tab_data, sizeof(TAB_DATA));
     memcpy(header_desc, &HEADER_D, sizeof(HEADER_DESC));
-    header_desc->icon = &(tab_data->header.icon);
-    header_desc->lgp_id = (int)tab_data->header.lgp;
 
     GUI *tab_gui = GetMenuGUI(malloc_adr(), mfree_adr());
     Sie_GUI_PatchHeader(header_desc);
-#ifdef ELKA
-    tab_data->header.icon = 951;
-#endif
 
     SetHeaderToMenu(tab_gui, header_desc, malloc_adr());
     SetMenuToGUI(tab_gui, &DESC);
@@ -174,13 +166,11 @@ void *CreateTabGUI(int tab_n) {
     char str[32];
     sprintf(str, "%d:", (tab_n < 3) ? tab_n : 4);
     tab_data->path = Path_Push(NULL, str, 0);
-    strcpy(tab_data->header.lgp, tab_data->path->path);
     sprintf(str, "%s\\*", tab_data->path->path);
     tab_data->files = Sie_FS_FindFiles(str);
     tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
     unsigned int count = Sie_FS_GetFilesCount(tab_data->files);
     SetMenuItemCount(tab_gui, (int)count);
-    tab_data->items_count = count;
 
     MenuSetUserPointer(tab_gui, tab_data);
     UpdateHeader(tab_gui);
