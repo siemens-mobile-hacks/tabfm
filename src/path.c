@@ -1,4 +1,5 @@
 #include <swilib.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "path.h"
@@ -7,8 +8,8 @@ PATH *Path_Push(PATH *path, const char *p, int prev_item_n) {
     PATH *new = malloc(sizeof(PATH));
     zeromem(new, sizeof(PATH));
     new->prev = path;
-    new->path = malloc(strlen(p) + 1);
-    strcpy(new->path, p);
+    new->path = malloc(strlen(p) + 1 + 1);
+    sprintf(new->path, "%s\\", p);
     if (path) {
         path->next = new;
         path->item_n = prev_item_n;

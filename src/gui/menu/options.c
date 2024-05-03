@@ -9,8 +9,9 @@ static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"Options", LGP_NULL};
 
 static int ICONS[] = {ICON_BLANK};
 
-void Create_Proc() {
-    GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Create());
+void Create_Proc(GUI *gui) {
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Create(tab_gui));
 }
 
 static const MENUITEM_DESC MENU_ITEMS[] = {
@@ -49,8 +50,8 @@ static const MENU_DESC MENU_D = {
         1,
 };
 
-int CreateMenu_Options() {
+int CreateMenu_Options(const GUI *tab_gui) {
     Sie_GUI_InitHeaderSmall(&HEADER_D);
     return CreateMenu(1, 0, &MENU_D, &HEADER_D, 0, 1,
-                      NULL, NULL);
+                      (void*)tab_gui, NULL);
 }

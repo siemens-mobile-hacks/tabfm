@@ -9,8 +9,9 @@ static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"Create", LGP_NULL};
 
 static int ICONS[] = {ICON_BLANK};
 
-void File_Proc() {
-    GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_CreateNewFile());
+void File_Proc(GUI *gui) {
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_CreateNewFile(tab_gui));
 }
 
 void Directory_Proc() {
@@ -52,8 +53,8 @@ static const MENU_DESC MENU_D = {
         2,
 };
 
-int CreateMenu_Create() {
+int CreateMenu_Create(const GUI *tab_gui) {
     Sie_GUI_InitHeaderSmall(&HEADER_D);
     return CreateMenu(1, 0, &MENU_D, &HEADER_D, 0, 2,
-                      NULL, NULL);
+                      (void*)tab_gui, NULL);
 }

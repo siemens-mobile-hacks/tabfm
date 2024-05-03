@@ -1,9 +1,12 @@
 #include <swilib.h>
 #include <sie/sie.h>
+#include "ipc.h"
 #include "gui/gui.h"
+#include "gui/tab.h"
 
 typedef struct {
     CSM_RAM csm;
+    GUI *gui;
     int gui_id;
 } MAIN_CSM;
 
@@ -17,7 +20,7 @@ static void maincsm_oncreate(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     csm->csm.state = 0;
     csm->csm.unk1 = 0;
-    MAIN_GUI_ID = csm->gui_id = CreateMainGUI();
+    MAIN_GUI_ID = csm->gui_id = CreateMainGUI(&(csm->gui));
     GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, MAIN_GUI_ID);
 }
 
@@ -30,6 +33,16 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     if ((msg->msg == MSG_GUI_DESTROYED) && ((int)msg->data0 == csm->gui_id)) {
         csm->csm.state = -3;
+    } else if (msg->msg == MSG_IPC) {
+        IPC_REQ *ipc = (IPC_REQ*)msg->data0;
+        if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
+            if (msg->submess == IPC_REFRESH) {
+                GUI *tab_gui = GetGuiByTab(csm->gui, GetCursorTab(csm->gui));
+                TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+                Navigate(tab_gui, tab_data->path->path);
+                RefreshTabByFileName(tab_gui, ipc->data);
+            }
+        }
     }
     return 1;
 }

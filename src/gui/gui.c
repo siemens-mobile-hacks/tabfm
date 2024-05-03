@@ -36,15 +36,15 @@ const TABGUI_DESC TABGUI_D = {
         NULL,
 };
 
-int CreateMainGUI() {
-    GUI *tab_gui = GetTabGUI(malloc_adr(), mfree_adr());
-    SetGUIDefinition(tab_gui, &TABGUI_D);
+int CreateMainGUI(GUI **gui) {
+    *gui = GetTabGUI(malloc_adr(), mfree_adr());
+    SetGUIDefinition(*gui, &TABGUI_D);
     for (int i = 0; i < 4; i++) {
-        void *gui = CreateTabGUI(i);
-        SetGUIToTabGUI(tab_gui, i, ICONS[i], gui);
+        void *tab_gui = CreateTabGUI(i);
+        SetGUIToTabGUI(*gui, i, ICONS[i], tab_gui);
     }
-    UpdateTab1stItem(tab_gui, 0);
-    return CreateGUI(tab_gui);
+    UpdateTab1stItem(*gui, 0);
+    return CreateGUI(*gui);
 }
 
 void CloseChildrenGUI() {

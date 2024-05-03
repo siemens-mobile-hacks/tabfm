@@ -1,4 +1,3 @@
 #pragma once
 
-int CreateMenu_Options();
-void CloseMenuOptions();
+int CreateMenu_Options(const GUI *tab_gui);

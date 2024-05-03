@@ -2,15 +2,9 @@
 #include <sie/sie.h>
 #include <stdlib.h>
 #include <string.h>
+#include "tab.h"
 #include "icons.h"
 #include "menu/options.h"
-#include "../path.h"
-
-typedef struct {
-    HEADER_DESC header_desc;
-    PATH *path;
-    SIE_FILE *files;
-} TAB_DATA;
 
 extern SIE_GUI_STACK *GUI_STACK;
 
@@ -34,31 +28,46 @@ static const SOFTKEYSTAB SOFTKEYS_TAB = {
         SOFTKEY_D, 0,
 };
 
-void Navigate(GUI *tab_gui, const char *path, int item_n) {
-    unsigned int items_count = 0;
+void Navigate(GUI *tab_gui, const char *path) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+
+    Sie_FS_DestroyFiles(tab_data->files);
+
     char *mask = malloc(strlen(path) + 2 + 1);
-    sprintf(mask, "%s\\*", path);
+    sprintf(mask, "%s*", path);
     SIE_FILE *files = Sie_FS_FindFiles(mask);
     files = Sie_FS_SortFilesByNameAsc(files, 1);
-    if (files) {
-        Sie_FS_DestroyFiles(tab_data->files);
-        tab_data->files = files;
-        items_count = Sie_FS_GetFilesCount(tab_data->files);
-    } else {
-        item_n = 0;
-    }
+    tab_data->files = files;
+    mfree(mask);
+}
+
+void RefreshTab(GUI *tab_gui, int item_n) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+    unsigned int items_count = (tab_data->files) ? Sie_FS_GetFilesCount(tab_data->files) : 0;
     Menu_SetItemCountDyn(tab_gui, (int)items_count);
     UpdateMenuCursorItem(tab_gui, item_n);
-    mfree(mask);
+}
+
+void RefreshTabByFileName(GUI *tab_gui, const char *file_name) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+    int item_n = 0;
+    unsigned int items_count = 0;
+    if (tab_data->files) {
+        item_n = Sie_FS_GetIDByFileName(tab_data->files, file_name);
+        items_count = Sie_FS_GetFilesCount(tab_data->files);
+    }
+    tab_data->path->item_n = item_n;
+    SetCursorToMenuItem(tab_gui, item_n);
+    Menu_SetItemCountDyn(tab_gui, (int)items_count);
+    SetCursorToMenuItem(tab_gui, item_n);
+    UpdateMenuCursorItem(tab_gui, item_n);
 }
 
 void UpdateHeader(GUI *tab_gui) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
 
     WSHDR *ws = AllocWS(256);
-    str_2ws(ws, tab_data->path->path, 255);
-    wsAppendChar(ws, '\\');
+    str_2ws(ws, tab_data->path->path, 256);
     SetHeaderText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
 }
 
@@ -67,7 +76,7 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     int item_n = GetCurMenuItem(gui);
 
     if (msg->keys == 0x18) { // options
-        GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Options());
+        GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Options(gui));
     } else if (msg->keys == 0x3D) { // enter
         SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
         if (file) {
@@ -75,14 +84,16 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
                 char *path = Sie_FS_GetPathByFile(file);
                 tab_data->path = Path_Push(tab_data->path, path, item_n);
                 mfree(path);
-                Navigate(gui, tab_data->path->path, 0);
+                Navigate(gui, tab_data->path->path);
+                RefreshTab(gui, 0);
             }
         }
     } else if (msg->keys == 0x01) { // back
         if (tab_data->path->prev) {
             PATH *path = Path_Pop(tab_data->path);
             tab_data->path = path;
-            Navigate(gui, tab_data->path->path, tab_data->path->item_n);
+            Navigate(gui, tab_data->path->path);
+            RefreshTab(gui, tab_data->path->item_n);
             return -1;
         } else {
             return 1;
@@ -166,7 +177,7 @@ void *CreateTabGUI(int tab_n) {
     char str[32];
     sprintf(str, "%d:", (tab_n < 3) ? tab_n : 4);
     tab_data->path = Path_Push(NULL, str, 0);
-    sprintf(str, "%s\\*", tab_data->path->path);
+    sprintf(str, "%s*", tab_data->path->path);
     tab_data->files = Sie_FS_FindFiles(str);
     tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
     unsigned int count = Sie_FS_GetFilesCount(tab_data->files);

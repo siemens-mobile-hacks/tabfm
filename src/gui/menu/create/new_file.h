@@ -1,4 +1,4 @@
 #pragma once
 
-int CreateMenu_CreateNewFile();
+int CreateMenu_CreateNewFile(const GUI *tab_gui);
 

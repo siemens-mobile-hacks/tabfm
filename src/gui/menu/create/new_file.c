@@ -1,6 +1,13 @@
 #include <swilib.h>
 #include <sie/sie.h>
+#include "../../tab.h"
 #include "../../icons.h"
+#include "../../../procs/create_new_file.h"
+
+typedef struct {
+    GUI *tab_gui;
+    SIE_FILE *files;
+} MENU_DATA;
 
 static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"New file", LGP_NULL};
 
@@ -18,19 +25,33 @@ static const SOFTKEYSTAB SOFTKEYS_TAB = {
         SOFTKEY_D, 0,
 };
 
+static int OnKey(GUI *gui, GUI_MSG *msg) {
+    MENU_DATA *menu_data = MenuGetUserPointer(gui);
+    TAB_DATA *tab_data = MenuGetUserPointer(menu_data->tab_gui);
+    int item_n = GetCurMenuItem(gui);
+
+    if (msg->keys == 0x18 || msg->keys == 0x3D) {
+        SIE_FILE *file = Sie_FS_GetFileByID(menu_data->files, item_n);
+        CreateNewFile(file, tab_data->path->path);
+    }
+    return 0;
+}
+
+
 static void GHook(GUI *gui, int cmd) {
-    SIE_FILE *files = MenuGetUserPointer(gui);
+    MENU_DATA *menu_data = MenuGetUserPointer(gui);
     if (cmd == TI_CMD_DESTROY) {
-        Sie_FS_DestroyFiles(files);
+        Sie_FS_DestroyFiles(menu_data->files);
+        mfree(menu_data);
     }
 }
 
 void ItemProc(void *gui, int item_n, void *data) {
-    SIE_FILE *files = (SIE_FILE*)data;
+    MENU_DATA *menu_data = (MENU_DATA*)data;
 
     void *item = AllocMenuItem(gui);
     WSHDR *ws = AllocMenuWS(gui, 256);
-    SIE_FILE *file = Sie_FS_GetFileByID(files, item_n);
+    SIE_FILE *file = Sie_FS_GetFileByID(menu_data->files, item_n);
     str_2ws(ws, file->file_name, 255);
     SetMenuItemIconArray(gui, item, ICONS);
     SetMenuItemText(gui, item, ws, item_n);
@@ -38,7 +59,7 @@ void ItemProc(void *gui, int item_n, void *data) {
 
 static const MENU_DESC MENU_D = {
         8,
-        NULL,
+        OnKey,
         GHook,
         NULL,
         SOFTKEYS,
@@ -49,10 +70,13 @@ static const MENU_DESC MENU_D = {
         NULL
 };
 
-int CreateMenu_CreateNewFile() {
+int CreateMenu_CreateNewFile(const GUI *tab_gui) {
     Sie_GUI_InitHeaderSmall(&HEADER_D);
-    SIE_FILE *files = Sie_FS_FindFiles("0:\\Templates\\*");
-    int count = (int)Sie_FS_GetFilesCount(files);
+
+    MENU_DATA *menu_data = malloc(sizeof(MENU_DATA));
+    menu_data->tab_gui = (GUI*)tab_gui;
+    menu_data->files = Sie_FS_FindFiles("0:\\Templates\\*");
+    int count = (int)Sie_FS_GetFilesCount(menu_data->files);
     return CreateMenu(1, 0, &MENU_D, &HEADER_D,
-                      0, count,files, NULL);
+                      0, count,menu_data, NULL);
 }

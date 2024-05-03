@@ -1,4 +1,5 @@
 #pragma once
 
-int CreateMainGUI();
+int CreateMainGUI(GUI **gui);
 void CloseChildrenGUI();
+
