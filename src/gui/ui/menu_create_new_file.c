@@ -27,12 +27,11 @@ static const SOFTKEYSTAB SOFTKEYS_TAB = {
 
 static int OnKey(GUI *gui, GUI_MSG *msg) {
     MENU_DATA *menu_data = MenuGetUserPointer(gui);
-    TAB_DATA *tab_data = MenuGetUserPointer(menu_data->tab_gui);
     int item_n = GetCurMenuItem(gui);
 
     if (msg->keys == 0x18 || msg->keys == 0x3D) {
         SIE_FILE *file = Sie_FS_GetFileByID(menu_data->files, item_n);
-        CreateNewFile(file, tab_data->path->path);
+        CreateNewFile(menu_data->tab_gui, file);
     }
     return 0;
 }

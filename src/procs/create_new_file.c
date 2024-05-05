@@ -46,12 +46,15 @@ static void Focus(DATA *data) {
     Sie_SubProc_Run(SUBPROC_CreateNewFile, (void*)data);
 }
 
-void CreateNewFile(SIE_FILE *file, const char *out_dir) {
+void CreateNewFile(GUI *tab_gui, SIE_FILE *file) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+
+
     static GBSTMR tmr;
     static DATA data;
     static SIE_GUI_FOCUS_DATA focus_data;
     data.src_file = Sie_FS_CopyFileElement(file);
-    data.out_dir = (char*)out_dir;
+    data.out_dir = tab_data->path->path;
     focus_data.gui_id = MAIN_GUI_ID;
     focus_data.proc = (void(*))(void*)Focus;
     focus_data.data = &data;
