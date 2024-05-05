@@ -86,13 +86,15 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
                 ToggleMark(gui);
                 RefreshGUI();
             } else {
+                char *path = Sie_FS_GetPathByFile(file);
                 if (file->file_attr & SIE_FS_FA_DIRECTORY) {
-                    char *path = Sie_FS_GetPathByFile(file);
                     tab_data->path = Path_Push(tab_data->path, path, item_n);
-                    mfree(path);
                     Navigate(gui, tab_data->path->path);
                     RefreshTab(gui, 0);
+                } else {
+                    Sie_Exec_File(path);
                 }
+                mfree(path);
             }
         }
     } else if (msg->keys == 0x01) { // back
