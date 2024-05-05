@@ -1,8 +1,8 @@
 #include <swilib.h>
 #include <sie/sie.h>
-#include "../../tab.h"
-#include "../../icons.h"
-#include "../../../procs/create_new_file.h"
+#include "../tab.h"
+#include "../icons.h"
+#include "../../procs/create_new_file.h"
 
 typedef struct {
     GUI *tab_gui;
@@ -15,7 +15,7 @@ static int ICONS[] = {ICON_BLANK};
 
 static const int SOFTKEYS[] = {0, 1, 2};
 
-static SOFTKEY_DESC SOFTKEY_D[] = {
+static const SOFTKEY_DESC SOFTKEY_D[] = {
         {0x0018, 0x0000, (int)"Select"},
         {0x0001, 0x0000, (int)"Back"},
         {0x003D, 0x0000, (int)LGP_DOIT_PIC},
@@ -70,7 +70,7 @@ static const MENU_DESC MENU_D = {
         NULL
 };
 
-int CreateMenu_CreateNewFile(const GUI *tab_gui) {
+int CreateMenu_CreateNewFile(GUI *tab_gui) {
     Sie_GUI_InitHeaderSmall(&HEADER_D);
 
     MENU_DATA *menu_data = malloc(sizeof(MENU_DATA));

@@ -4,7 +4,7 @@
 #include <string.h>
 #include "tab.h"
 #include "icons.h"
-#include "menu/options.h"
+#include "ui/menu_options.h"
 
 extern SIE_GUI_STACK *GUI_STACK;
 
@@ -57,9 +57,7 @@ void RefreshTabByFileName(GUI *tab_gui, const char *file_name) {
         items_count = Sie_FS_GetFilesCount(tab_data->files);
     }
     tab_data->path->item_n = item_n;
-    SetCursorToMenuItem(tab_gui, item_n);
     Menu_SetItemCountDyn(tab_gui, (int)items_count);
-    SetCursorToMenuItem(tab_gui, item_n);
     UpdateMenuCursorItem(tab_gui, item_n);
 }
 
