@@ -11,8 +11,6 @@ typedef struct {
     int waitbox_gui_id;
 } DATA;
 
-char DEST_FILE_NAME[128];
-
 extern int MAIN_GUI_ID;
 extern SIE_GUI_STACK *GUI_STACK;
 
@@ -34,8 +32,9 @@ void SUBPROC_CreateNewFile(DATA *data) {
     mfree(dest);
 
     if (status >= 0) {
-        strcpy(DEST_FILE_NAME, dest_file->file_name);
-        IPC_Refresh(DEST_FILE_NAME);
+        static char file_name[128];
+        strcpy(file_name, dest_file->file_name);
+        IPC_Refresh(file_name);
     } else {
     }
     Sie_FS_DestroyFileElement(data->src_file);
