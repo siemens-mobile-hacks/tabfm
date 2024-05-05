@@ -7,10 +7,13 @@
 #include "ui/menu_options.h"
 #include "../procs/procs.h"
 
+#define SOFTKEY_BACK   {0x0001, 0x0000, (int)LGP_NULL}
+#define SOFTKEY_MIDDLE {0x003D, 0x0000, (int)LGP_DOIT_PIC}
+
 extern SIE_GUI_STACK *GUI_STACK;
 
 const char LGP_BACK[] = "Back";
-const char LGP_QUIT[] = "Quit";
+const char LGP_EXIT[] = "Exit";
 
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
@@ -21,8 +24,7 @@ static const int SOFTKEYS[] = {0, 1, 2};
 
 static SOFTKEY_DESC SOFTKEY_D[] = {
         {0x0018, 0x0000, (int)"Options"},
-        {0x0001, 0x0000, (int)LGP_QUIT},
-        {0x003D, 0x0000, (int)LGP_DOIT_PIC},
+        SOFTKEY_BACK, SOFTKEY_MIDDLE
 };
 
 static const SOFTKEYSTAB SOFTKEYS_TAB = {
@@ -124,14 +126,19 @@ static void GHook(GUI *gui, int cmd) {
     TAB_DATA *tab_data = MenuGetUserPointer(gui);
     int item_n = GetCurMenuItem(gui);
     if (cmd == TI_CMD_REDRAW) {
-        UpdateHeader(gui);
+        static SOFTKEY_DESC sk_back = SOFTKEY_BACK;
+        static SOFTKEY_DESC sk_middle = SOFTKEY_MIDDLE;
+
         if (tab_data->files) {
             SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
             tab_data->current_file = file;
         } else {
             tab_data->current_file = NULL;
         }
-        SOFTKEY_D[1].lgp_id = (tab_data->path->prev) ? (int)LGP_BACK : (int)LGP_QUIT;
+        sk_back.lgp_id = (tab_data->path->prev) ? (int)LGP_BACK : (int)LGP_EXIT;
+        sk_middle.lgp_id = (tab_data->selected_files) ? LGP_CHANGE_PIC : LGP_DOIT_PIC;
+        SetMenuSoftKey(gui, &sk_back, SET_RIGHT_SOFTKEY);
+        SetMenuSoftKey(gui, &sk_middle, SET_MIDDLE_SOFTKEY);
     } else if (cmd == TI_CMD_DESTROY) {
         Sie_FS_DestroyFiles(tab_data->files);
         Sie_FS_DestroyFiles(tab_data->selected_files);
