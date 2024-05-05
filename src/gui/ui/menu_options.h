@@ -1,3 +1,3 @@
 #pragma once
 
-int CreateMenu_Options(const GUI *tab_gui);
+int CreateMenu_Options(GUI *tab_gui);

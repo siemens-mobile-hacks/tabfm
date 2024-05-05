@@ -10,6 +10,11 @@ static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"Create", LGP_NULL};
 
 static int ICONS[] = {ICON_BLANK};
 
+static const MENUITEM_DESC MENU_ITEMS[] = {
+        {ICONS, (int)"File", LGP_NULL, 0, NULL, MENU_FLAG3, MENU_FLAG2},
+        {ICONS, (int)"Directory", LGP_NULL, 0, NULL, MENU_FLAG3, MENU_FLAG2},
+};
+
 void File_Proc(GUI *gui) {
     GUI *tab_gui = MenuGetUserPointer(gui);
     GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_CreateNewFile(tab_gui));
@@ -19,11 +24,6 @@ void Directory_Proc(GUI *gui) {
     GUI *tab_gui = MenuGetUserPointer(gui);
     CreateInputTextDialog_NewDir(tab_gui);
 }
-
-static const MENUITEM_DESC MENU_ITEMS[] = {
-        {ICONS, (int)"File", LGP_NULL, 0, NULL, MENU_FLAG3, MENU_FLAG2},
-        {ICONS, (int)"Directory", LGP_NULL, 0, NULL, MENU_FLAG3, MENU_FLAG2},
-};
 
 static const MENUPROCS_DESC MENU_PROCS[] = {
         File_Proc,

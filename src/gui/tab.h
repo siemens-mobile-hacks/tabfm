@@ -6,6 +6,8 @@ typedef struct {
     HEADER_DESC header_desc;
     PATH *path;
     SIE_FILE *files;
+    SIE_FILE *current_file;
+    SIE_FILE *selected_files;
 } TAB_DATA;
 
 void *CreateTabGUI(int tab_n);

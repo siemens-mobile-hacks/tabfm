@@ -5,6 +5,7 @@
 #include "tab.h"
 #include "icons.h"
 #include "ui/menu_options.h"
+#include "../procs/procs.h"
 
 extern SIE_GUI_STACK *GUI_STACK;
 
@@ -14,7 +15,7 @@ const char LGP_QUIT[] = "Quit";
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
 
-static const int ICONS[] = {ICON_DIR, ICON_UNK, ICON_BLANK};
+static const int ICONS[] = {ICON_DIR, ICON_UNK, ICON_BLANK, ICON_MARK};
 
 static const int SOFTKEYS[] = {0, 1, 2};
 
@@ -32,6 +33,9 @@ void Navigate(GUI *tab_gui, const char *path) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
 
     Sie_FS_DestroyFiles(tab_data->files);
+    Sie_FS_DestroyFiles(tab_data->selected_files);
+    tab_data->current_file = NULL;
+    tab_data->selected_files = NULL;
 
     char *mask = malloc(strlen(path) + 2 + 1);
     sprintf(mask, "%s*", path);
@@ -78,12 +82,17 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     } else if (msg->keys == 0x3D) { // enter
         SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
         if (file) {
-            if (file->file_attr & SIE_FS_FA_DIRECTORY) {
-                char *path = Sie_FS_GetPathByFile(file);
-                tab_data->path = Path_Push(tab_data->path, path, item_n);
-                mfree(path);
-                Navigate(gui, tab_data->path->path);
-                RefreshTab(gui, 0);
+            if (tab_data->selected_files) {
+                ToggleMark(gui);
+                RefreshGUI();
+            } else {
+                if (file->file_attr & SIE_FS_FA_DIRECTORY) {
+                    char *path = Sie_FS_GetPathByFile(file);
+                    tab_data->path = Path_Push(tab_data->path, path, item_n);
+                    mfree(path);
+                    Navigate(gui, tab_data->path->path);
+                    RefreshTab(gui, 0);
+                }
             }
         }
     } else if (msg->keys == 0x01) { // back
@@ -96,17 +105,34 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
         } else {
             return 1;
         }
+    } else {
+        if (msg->gbsmsg->msg == KEY_DOWN || msg->gbsmsg->msg == LONG_PRESS) {
+            switch (msg->gbsmsg->submess) {
+                case '*':
+                    ToggleMark(gui);
+                    RefreshGUI();
+                    break;
+            }
+        }
     }
     return 0;
 }
 
 static void GHook(GUI *gui, int cmd) {
     TAB_DATA *tab_data = MenuGetUserPointer(gui);
+    int item_n = GetCurMenuItem(gui);
     if (cmd == TI_CMD_REDRAW) {
         UpdateHeader(gui);
+        if (tab_data->files) {
+            SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
+            tab_data->current_file = file;
+        } else {
+            tab_data->current_file = NULL;
+        }
         SOFTKEY_D[1].lgp_id = (tab_data->path->prev) ? (int)LGP_BACK : (int)LGP_QUIT;
     } else if (cmd == TI_CMD_DESTROY) {
         Sie_FS_DestroyFiles(tab_data->files);
+        Sie_FS_DestroyFiles(tab_data->selected_files);
         Path_Destroy(tab_data->path);
         mfree(tab_data);
     }
@@ -122,27 +148,30 @@ static void ItemProc(void *gui, int item_n, void *data) {
     SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
     str_2ws(ws, file->file_name, 255);
 
-    if (!(file->file_attr & SIE_FS_FA_DIRECTORY)) {
-        int uid = GetExtUidByFileName_ws(ws);
-        TREGEXPLEXT *reg_expl_ext = get_regextpnt_by_uid(uid);
-        if (reg_expl_ext && strlen(reg_expl_ext->ext)) {
-            int *icon = (int *)(reg_expl_ext->icon1);
-            if (*icon > 0 && *icon < 3000) {
-                SetMenuItemIconArray(gui, item, icon);
-            }
-            else if (strlen((const char*)*icon)) {
-                char *ext = Sie_Ext_GetExtByFileName((const char*)*icon);
-                if (strcmp(ext, "png") == 0) {
+    if (Sie_FS_ContainsFile(tab_data->selected_files, file)) { // marked
+        SetMenuItemIconArray(gui, item, &ICONS[3]);
+    } else {
+        if (!(file->file_attr & SIE_FS_FA_DIRECTORY)) {
+            int uid = GetExtUidByFileName_ws(ws);
+            TREGEXPLEXT *reg_expl_ext = get_regextpnt_by_uid(uid);
+            if (reg_expl_ext && strlen(reg_expl_ext->ext)) {
+                int *icon = (int *)(reg_expl_ext->icon1);
+                if (*icon > 0 && *icon < 3000) {
                     SetMenuItemIconArray(gui, item, icon);
+                } else if (strlen((const char *)*icon)) {
+                    char *ext = Sie_Ext_GetExtByFileName((const char *)*icon);
+                    if (strcmp(ext, "png") == 0) {
+                        SetMenuItemIconArray(gui, item, icon);
+                    }
+                } else {
+                    SetMenuItemIconArray(gui, item, &ICONS[2]); // blank
                 }
             } else {
-                SetMenuItemIconArray(gui, item, &ICONS[2]); // blank
+                SetMenuItemIconArray(gui, item, &ICONS[1]); // unknown
             }
         } else {
-            SetMenuItemIconArray(gui, item, &ICONS[1]); // unknown
+            SetMenuItemIconArray(gui, item, ICONS); // dir
         }
-    } else {
-        SetMenuItemIconArray(gui, item, ICONS); // dir
     }
     SetMenuItemText(gui, item, ws, item_n);
 }

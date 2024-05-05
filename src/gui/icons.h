@@ -4,4 +4,5 @@
     #define ICON_DISK  1019
     #define ICON_MMC   1021
     #define ICON_BLANK 1336
+    #define ICON_MARK  1338
 #endif

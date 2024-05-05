@@ -2,7 +2,7 @@
 #include <sie/sie.h>
 #include "../tab.h"
 #include "../icons.h"
-#include "../../procs/create_new_file.h"
+#include "../../procs/procs.h"
 
 typedef struct {
     GUI *tab_gui;
