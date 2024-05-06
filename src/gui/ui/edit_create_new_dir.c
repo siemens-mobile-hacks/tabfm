@@ -21,22 +21,25 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     if (msg->keys == 0x1A) {
         EDITCONTROL ec;
         ExtractEditControl(gui, 2, &ec);
-        if (wstrlen(ec.pWS)) {
+
+        static char file_name[128];
+        ws_2str(ec.pWS, file_name, 127);
+        if (strlen(file_name)) {
+            char path[256];
             unsigned int err;
-            WSHDR *ws = AllocWS(256);
-            str_2ws(ws, tab_data->path->path, 256);
-            wstrcat(ws, ec.pWS);
-            if (isdir_ws(ws, &err) == 1) {
+            sprintf(path, "%s%s", tab_data->path->path, file_name);
+            if (isdir(path, &err) == 1) {
                 MsgBoxError(1, (int)"The directory is exists!");
                 res = -1;
             } else {
-                static char dir[128];
-                sys_mkdir_ws(ws, &err);
-                ws_2str(ec.pWS, dir, 127);
-                CloseChildrenGUI();
-                IPC_Refresh(dir);
+                if (sys_mkdir(path, &err)) {
+                    CloseChildrenGUI();
+                    IPC_Refresh(file_name);
+                } else {
+                    MsgBoxError(1, (int)"Create directory error!");
+                    res = -1;
+                }
             }
-            FreeWS(ws);
         } else {
             MsgBoxError(1, (int)"Invalid input!");
             res = -1;
@@ -81,7 +84,7 @@ int CreateInputTextDialog_NewDir(GUI *tab_gui) {
     ConstructEditControl(&ec, ECT_HEADER, ECF_APPEND_EOL, ws, 32);
     AddEditControlToEditQend(eq, &ec, ma);
     wsprintf(ws, "%s", "Untitled folder");
-    ConstructEditControl(&ec, ECT_NORMAL_TEXT, ECF_SET_CURSOR_END, ws, 128);
+    ConstructEditControl(&ec, ECT_NORMAL_TEXT, ECF_SET_CURSOR_END, ws, 127);
     AddEditControlToEditQend(eq, &ec, ma);
     FreeWS(ws);
 

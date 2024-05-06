@@ -62,9 +62,11 @@ void RefreshTabByFileName(GUI *tab_gui, const char *file_name) {
         item_n = Sie_FS_GetIDByFileName(tab_data->files, file_name);
         items_count = Sie_FS_GetFilesCount(tab_data->files);
     }
-    tab_data->path->item_n = item_n;
     Menu_SetItemCountDyn(tab_gui, (int)items_count);
-    UpdateMenuCursorItem(tab_gui, item_n);
+    if (item_n >= 0) {
+        tab_data->path->item_n = item_n;
+        UpdateMenuCursorItem(tab_gui, item_n);
+    }
 }
 
 void UpdateHeader(GUI *tab_gui) {
