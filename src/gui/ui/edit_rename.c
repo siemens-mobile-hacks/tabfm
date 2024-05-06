@@ -1,13 +1,13 @@
 #include <swilib.h>
-#include "sie/sie.h"
-#include "../gui.h"
+#include <sie/sie.h>
 #include "../tab.h"
+#include "../gui.h"
 #include "../../ipc.h"
 
 #define SOFTKEY_SAVE   {0x001A, 0x0000, (int)"Save"}
 #define SOFTKEY_MIDDLE {0x001A, 0x0000, LGP_SAVE_PIC}
 
-static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"New directory",LGP_NULL};
+static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"Rename",LGP_NULL};
 
 static const SOFTKEYSTAB SOFTKEYS_TAB = {
         NULL, 0,
@@ -17,29 +17,26 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     int res = 0;
     GUI *tab_gui = EDIT_GetUserPointer(gui);
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-
     if (msg->keys == 0x1A) {
         EDITCONTROL ec;
         ExtractEditControl(gui, 2, &ec);
-        if (wstrlen(ec.pWS)) {
+
+        static char file_name[128];
+        ws_2str(ec.pWS, file_name, 127);
+        if (strcmpi(tab_data->current_file->file_name, file_name) != 0) {
             unsigned int err;
-            WSHDR *ws = AllocWS(256);
-            str_2ws(ws, tab_data->path->path, 256);
-            wstrcat(ws, ec.pWS);
-            if (isdir_ws(ws, &err) == 1) {
-                MsgBoxError(1, (int)"The directory is exists!");
-                res = -1;
-            } else {
-                static char dir[128];
-                sys_mkdir_ws(ws, &err);
-                ws_2str(ec.pWS, dir, 127);
+            char old_name[256], new_name[256];
+            sprintf(old_name, "%s%s", tab_data->current_file->dir_name, tab_data->current_file->file_name);
+            sprintf(new_name, "%s%s", tab_data->current_file->dir_name, file_name);
+            if (sys_rename(old_name, new_name, &err)) {
                 CloseChildrenGUI();
-                IPC_Refresh(dir);
+                IPC_Refresh(file_name);
+            } else {
+                MsgBoxError(1, (int)"Rename error!");
+                res = -1;
             }
-            FreeWS(ws);
         } else {
-            MsgBoxError(1, (int)"Invalid input!");
-            res = -1;
+            CloseChildrenGUI();
         }
     }
     return res;
@@ -70,18 +67,21 @@ static INPUTDIA_DESC INPUTDIA_D = {
         { INPUTDIA_FLAGS_SWAP_SOFTKEYS },
 };
 
-int CreateInputTextDialog_NewDir(GUI *tab_gui) {
+int CreateInputTextDialog_Rename(GUI *tab_gui) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+
     void *ma = malloc_adr();
     void *eq = AllocEQueue(ma, mfree_adr());
 
     EDITCONTROL ec;
-    WSHDR *ws = AllocWS(32);
+    WSHDR *ws = AllocWS(127);
     PrepareEditControl(&ec);
-    wsprintf(ws, "%s", "Directory name:");
+    wsprintf(ws, "%s", "Name:");
     ConstructEditControl(&ec, ECT_HEADER, ECF_APPEND_EOL, ws, 32);
     AddEditControlToEditQend(eq, &ec, ma);
-    wsprintf(ws, "%s", "Untitled folder");
-    ConstructEditControl(&ec, ECT_NORMAL_TEXT, ECF_SET_CURSOR_END, ws, 128);
+
+    str_2ws(ws, tab_data->current_file->file_name, 127);
+    ConstructEditControl(&ec, ECT_NORMAL_TEXT, ECF_SET_CURSOR_END, ws, 127);
     AddEditControlToEditQend(eq, &ec, ma);
     FreeWS(ws);
 

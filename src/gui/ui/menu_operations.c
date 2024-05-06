@@ -2,6 +2,7 @@
 #include <sie/sie.h>
 #include "../tab.h"
 #include "../icons.h"
+#include "edit_rename.h"
 
 #define MAX_ITEMS 5
 
@@ -35,7 +36,8 @@ void Paste_Proc(GUI *gui) {
 }
 
 void Rename_Proc(GUI *gui) {
-
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    CreateInputTextDialog_Rename(tab_gui);
 }
 
 void Copy_Proc(GUI *gui) {
