@@ -7,6 +7,8 @@
 extern int MAIN_GUI_ID;
 extern SIE_GUI_STACK *GUI_STACK;
 
+SIE_FILE *COPY_FILES, *MOVE_FILES;
+
 static const int ICONS[][4] = {
         {0, 0, 0, ICON_DISK},
         {0, 0, 0, ICON_DISK},
@@ -24,6 +26,9 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
 static void GHook(GUI *gui, int cmd) {
     if (cmd == TI_CMD_FOCUS) {
         DisableIDLETMR();
+    } else if (cmd == TI_CMD_DESTROY) {
+        Sie_FS_DestroyFiles(COPY_FILES);
+        Sie_FS_DestroyFiles(MOVE_FILES);
     }
 }
 

@@ -14,6 +14,8 @@ enum MenuItems {
     MENU_ITEM_DELETE,
 };
 
+extern SIE_FILE *COPY_FILES, *MOVE_FILES;
+
 static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"Operations", LGP_NULL};
 
 static int ICONS[] = {ICON_BLANK};
@@ -95,10 +97,14 @@ int CreateMenu_Operations(GUI *tab_gui) {
         to_remove[++items_count] = MENU_ITEM_PASTE;
         to_remove[++items_count] = MENU_ITEM_RENAME;
     } else {
+        if (!COPY_FILES && !MOVE_FILES) {
+            to_remove[++items_count] = MENU_ITEM_PASTE;
+        }
         if (!tab_data->current_file) {
             to_remove[++items_count] = MENU_ITEM_RENAME;
         }
     }
+    to_remove[0] = items_count;
     Sie_GUI_InitHeaderSmall(&HEADER_D);
     return CreateMenu(1, 0, &MENU_D, &HEADER_D, 0, items_count,
                       (void*)tab_gui, to_remove);
