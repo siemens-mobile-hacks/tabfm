@@ -21,22 +21,26 @@ int OnKey(GUI *gui, GUI_MSG *msg) {
     if (msg->keys == 0x1A) {
         EDITCONTROL ec;
         ExtractEditControl(gui, 2, &ec);
-
-        unsigned int err;
-        WSHDR *ws = AllocWS(256);
-        str_2ws(ws, tab_data->path->path, 256);
-        wstrcat(ws, ec.pWS);
-        if (isdir_ws(ws, &err) == 1) {
-            MsgBoxError(1, (int)"The directory is exists");
-            res = -1;
+        if (wstrlen(ec.pWS)) {
+            unsigned int err;
+            WSHDR *ws = AllocWS(256);
+            str_2ws(ws, tab_data->path->path, 256);
+            wstrcat(ws, ec.pWS);
+            if (isdir_ws(ws, &err) == 1) {
+                MsgBoxError(1, (int)"The directory is exists!");
+                res = -1;
+            } else {
+                static char dir[128];
+                sys_mkdir_ws(ws, &err);
+                ws_2str(ec.pWS, dir, 127);
+                CloseChildrenGUI();
+                IPC_Refresh(dir);
+            }
+            FreeWS(ws);
         } else {
-            static char dir[128];
-            sys_mkdir_ws(ws, &err);
-            ws_2str(ec.pWS, dir, 127);
-            CloseChildrenGUI();
-            IPC_Refresh(dir);
+            MsgBoxError(1, (int)"Invalid input!");
+            res = -1;
         }
-        FreeWS(ws);
     }
     return res;
 }
