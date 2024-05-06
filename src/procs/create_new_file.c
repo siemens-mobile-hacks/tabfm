@@ -49,7 +49,6 @@ static void Focus(DATA *data) {
 void CreateNewFile(GUI *tab_gui, SIE_FILE *file) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
 
-
     static GBSTMR tmr;
     static DATA data;
     static SIE_GUI_FOCUS_DATA focus_data;
