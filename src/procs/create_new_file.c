@@ -12,11 +12,10 @@ typedef struct {
 } DATA;
 
 extern int MAIN_GUI_ID;
-extern SIE_GUI_STACK *GUI_STACK;
+extern int IN_PROGRESS;
 
 void SUBPROC_CreateNewFile(DATA *data) {
     unsigned int err = 0;
-
     SIE_FILE *file = Sie_FS_CopyFileElement(data->src_file);
     file->dir_name = realloc(file->dir_name, strlen(data->out_dir) + 1);
     strcpy(file->dir_name, data->out_dir);
@@ -26,19 +25,20 @@ void SUBPROC_CreateNewFile(DATA *data) {
     char *src = Sie_FS_GetPathByFile(data->src_file);
     char *dest = Sie_FS_GetPathByFile(dest_file);
     int status = Sie_FS_CopyFile(src, dest, &err);
-    Sie_GUI_CloseGUI(data->waitbox_gui_id);
-    FocusGUI(MAIN_GUI_ID);
     mfree(src);
     mfree(dest);
 
+    Sie_GUI_CloseGUI(data->waitbox_gui_id);
     if (status >= 0) {
-        static char file_name[128];
+        static char file_name[256];
         strcpy(file_name, dest_file->file_name);
+        Sie_GUI_FocusGUI_Sync(MAIN_GUI_ID);
         IPC_Refresh(file_name);
     } else {
     }
     Sie_FS_DestroyFileElement(data->src_file);
     Sie_FS_DestroyFileElement(dest_file);
+    IN_PROGRESS = 0;
 }
 
 static void Focus(DATA *data) {
@@ -48,15 +48,17 @@ static void Focus(DATA *data) {
 
 void CreateNewFile(GUI *tab_gui, SIE_FILE *file) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-
-    static GBSTMR tmr;
-    static DATA data;
-    static SIE_GUI_FOCUS_DATA focus_data;
-    data.src_file = Sie_FS_CopyFileElement(file);
-    data.out_dir = tab_data->path->path;
-    focus_data.gui_id = MAIN_GUI_ID;
-    focus_data.proc = (void(*))(void*)Focus;
-    focus_data.data = &data;
-    CloseChildrenGUI();
-    Sie_GUI_FocusGUI(&tmr, &focus_data);
+    if (!IN_PROGRESS) {
+        IN_PROGRESS = 1;
+        static GBSTMR tmr;
+        static DATA data = {};
+        static SIE_GUI_FOCUS_DATA focus_data;
+        data.src_file = Sie_FS_CopyFileElement(file);
+        data.out_dir = tab_data->path->path;
+        focus_data.gui_id = MAIN_GUI_ID;
+        focus_data.proc = (void (*))(void *)Focus;
+        focus_data.data = &data;
+        CloseChildrenGUI();
+        Sie_GUI_FocusGUI_Async(&tmr, &focus_data);
+    }
 }

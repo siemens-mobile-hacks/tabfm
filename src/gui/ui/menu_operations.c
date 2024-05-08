@@ -2,6 +2,7 @@
 #include <sie/sie.h>
 #include "../tab.h"
 #include "../icons.h"
+#include "../../procs/procs.h"
 #include "edit_rename.h"
 
 #define MAX_ITEMS 5
@@ -51,7 +52,9 @@ void Move_Proc(GUI *gui) {
 }
 
 void Delete_Proc(GUI *gui) {
-
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GeneralFuncF1(1);
+    Delete(tab_gui);
 }
 
 static const MENUPROCS_DESC MENU_PROCS[MAX_ITEMS] = {
@@ -102,6 +105,9 @@ int CreateMenu_Operations(GUI *tab_gui) {
         }
         if (!tab_data->current_file) {
             to_remove[++items_count] = MENU_ITEM_RENAME;
+            to_remove[++items_count] = MENU_ITEM_COPY;
+            to_remove[++items_count] = MENU_ITEM_MOVE;
+            to_remove[++items_count] = MENU_ITEM_DELETE;
         }
     }
     to_remove[0] = items_count;

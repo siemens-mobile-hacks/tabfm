@@ -7,13 +7,14 @@
 #include "ui/menu_options.h"
 #include "../procs/procs.h"
 
-#define SOFTKEY_BACK   {0x0001, 0x0000, (int)LGP_NULL}
-#define SOFTKEY_MIDDLE {0x003D, 0x0000, (int)LGP_DOIT_PIC}
+#define LGP_BACK "Back"
+#define LGP_EXIT "Exit"
 
+#define SOFTKEY_BACK    {0x0001, 0x0000, (int)LGP_NULL}
+#define SOFTKEY_MIDDLE  {0x003D, 0x0000, (int)LGP_DOIT_PIC}
+
+extern int IN_PROGRESS;
 extern SIE_GUI_STACK *GUI_STACK;
-
-const char LGP_BACK[] = "Back";
-const char LGP_EXIT[] = "Exit";
 
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
@@ -41,9 +42,9 @@ void Navigate(GUI *tab_gui, const char *path) {
 
     char *mask = malloc(strlen(path) + 2 + 1);
     sprintf(mask, "%s*", path);
-    SIE_FILE *files = Sie_FS_FindFiles(mask);
-    files = Sie_FS_SortFilesByNameAsc(files, 1);
-    tab_data->files = files;
+    tab_data->files = Sie_FS_FindFiles(mask);
+    tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
+    tab_data->files = tab_data->files;
     mfree(mask);
 }
 
@@ -59,14 +60,15 @@ void RefreshTabByFileName(GUI *tab_gui, const char *file_name) {
     int item_n = 0;
     unsigned int items_count = 0;
     if (tab_data->files) {
-        item_n = Sie_FS_GetIDByFileName(tab_data->files, file_name);
+        item_n = (file_name) ? Sie_FS_GetIDByFileName(tab_data->files, file_name) : GetCurMenuItem(tab_gui);
         items_count = Sie_FS_GetFilesCount(tab_data->files);
     }
-    Menu_SetItemCountDyn(tab_gui, (int)items_count);
-    if (item_n >= 0) {
-        tab_data->path->item_n = item_n;
-        UpdateMenuCursorItem(tab_gui, item_n);
+    if (item_n > items_count - 1) {
+        item_n = (int)items_count - 1;
     }
+    Menu_SetItemCountDyn(tab_gui, (int)items_count);
+    tab_data->path->item_n = item_n;
+    UpdateMenuCursorItem(tab_gui, item_n);
 }
 
 void UpdateHeader(GUI *tab_gui) {
@@ -82,7 +84,9 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     int item_n = GetCurMenuItem(gui);
 
     if (msg->keys == 0x18) { // options
-        GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Options(gui));
+        if (!IN_PROGRESS) {
+            GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Options(gui));
+        }
     } else if (msg->keys == 0x3D) { // enter
         SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
         if (file) {
@@ -118,6 +122,9 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
                     ToggleMark(gui);
                     RefreshGUI();
                     break;
+                case '#':
+                    Delete(gui);
+                    break;
             }
         }
     }
@@ -130,12 +137,13 @@ static void GHook(GUI *gui, int cmd) {
     if (cmd == TI_CMD_REDRAW) {
         static SOFTKEY_DESC sk_back = SOFTKEY_BACK;
         static SOFTKEY_DESC sk_middle = SOFTKEY_MIDDLE;
-
+        Sie_FS_DestroyFiles(tab_data->current_file);
+        tab_data->current_file = NULL;
         if (tab_data->files) {
             SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
-            tab_data->current_file = file;
-        } else {
-            tab_data->current_file = NULL;
+            if (file) {
+                tab_data->current_file = Sie_FS_CopyFileElement(file);
+            }
         }
         sk_back.lgp_id = (tab_data->path->prev) ? (int)LGP_BACK : (int)LGP_EXIT;
         sk_middle.lgp_id = (tab_data->selected_files) ? LGP_CHANGE_PIC : LGP_DOIT_PIC;
@@ -143,6 +151,7 @@ static void GHook(GUI *gui, int cmd) {
         SetMenuSoftKey(gui, &sk_middle, SET_MIDDLE_SOFTKEY);
     } else if (cmd == TI_CMD_DESTROY) {
         Sie_FS_DestroyFiles(tab_data->files);
+        Sie_FS_DestroyFiles(tab_data->current_file);
         Sie_FS_DestroyFiles(tab_data->selected_files);
         Path_Destroy(tab_data->path);
         mfree(tab_data);

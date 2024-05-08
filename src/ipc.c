@@ -10,5 +10,15 @@ static void Send(int submess, void *data) {
 }
 
 void IPC_Refresh(const char *file_name) {
-    Send(IPC_REFRESH, (void*)file_name);
+    static IPC_DATA ipc_data = {};
+    ipc_data.param0 = (void*)file_name;
+    Send(IPC_REFRESH, &ipc_data);
+}
+
+void IPC_SetPBarData(int gui_id, int value, const WSHDR *ws) {
+    static IPC_DATA ipc_data = {};
+    ipc_data.param0 = (void*)gui_id;
+    ipc_data.param1 = (void*)value;
+    ipc_data.param2 = (void*)ws;
+    Send(IPC_SETPBARTEXT, &ipc_data);
 }
