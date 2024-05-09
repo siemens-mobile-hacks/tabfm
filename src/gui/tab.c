@@ -45,7 +45,6 @@ void Navigate(GUI *tab_gui, const char *path) {
 
     Sie_FS_DestroyFiles(tab_data->files);
     Sie_FS_DestroyFiles(tab_data->selected_files);
-    tab_data->current_file = NULL;
     tab_data->selected_files = NULL;
 
     char *mask = malloc(strlen(path) + 2 + 1);
