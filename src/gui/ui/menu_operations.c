@@ -44,11 +44,13 @@ void Rename_Proc(GUI *gui) {
 }
 
 void Copy_Proc(GUI *gui) {
-
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    Copy(tab_gui);
 }
 
 void Move_Proc(GUI *gui) {
-
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    Move(tab_gui);
 }
 
 void Delete_Proc(GUI *gui) {
