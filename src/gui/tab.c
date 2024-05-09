@@ -32,6 +32,14 @@ static const SOFTKEYSTAB SOFTKEYS_TAB = {
         SOFTKEY_D, 0,
 };
 
+void RefreshHeader(GUI *tab_gui) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+
+    WSHDR *ws = AllocWS(256);
+    str_2ws(ws, tab_data->path->path, 256);
+    SetHeaderText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
+}
+
 void Navigate(GUI *tab_gui, const char *path) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
 
@@ -46,6 +54,8 @@ void Navigate(GUI *tab_gui, const char *path) {
     tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
     tab_data->files = tab_data->files;
     mfree(mask);
+
+    RefreshHeader(tab_gui);
 }
 
 void RefreshTab(GUI *tab_gui, int item_n) {
@@ -69,14 +79,6 @@ void RefreshTabByFileName(GUI *tab_gui, const char *file_name) {
     Menu_SetItemCountDyn(tab_gui, (int)items_count);
     tab_data->path->item_n = item_n;
     UpdateMenuCursorItem(tab_gui, item_n);
-}
-
-void UpdateHeader(GUI *tab_gui) {
-    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-
-    WSHDR *ws = AllocWS(256);
-    str_2ws(ws, tab_data->path->path, 256);
-    SetHeaderText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
 }
 
 static int OnKey(GUI *gui, GUI_MSG *msg) {
@@ -231,7 +233,7 @@ void *CreateTabGUI(int tab_n) {
     SetMenuItemCount(tab_gui, (int)count);
 
     MenuSetUserPointer(tab_gui, tab_data);
-    UpdateHeader(tab_gui);
+    RefreshHeader(tab_gui);
 
     return tab_gui;
 }
