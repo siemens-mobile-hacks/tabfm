@@ -26,7 +26,7 @@ void SUBPROC_Delete() {
             break;
         }
 
-        SetPBarData(data.pbar_gui_id, file, i + 1, data.total_files);
+        SetPBarData(data.pbar_gui_id, file, i, data.total_files);
         char *path = Sie_FS_GetPathByFile(file);
         if (file->file_attr & SIE_FS_FA_DIRECTORY) {
             Sie_FS_DeleteDirRecursive(path, &err);
@@ -34,6 +34,7 @@ void SUBPROC_Delete() {
             Sie_FS_DeleteFile(path, &err);
         }
         mfree(path);
+        SetPBarData(data.pbar_gui_id, file, i + 1, data.total_files);
 
         file = file->next;
         i++;

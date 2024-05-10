@@ -43,7 +43,6 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
         if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
             if (msg->submess == IPC_REFRESH) {
                 MutexLock(&csm->mtx);
-
                 IPC_DATA *ipc_data = ipc->data;
                 int tab_n = (int)ipc_data->param0;
                 const char *file_name = ipc_data->param1;

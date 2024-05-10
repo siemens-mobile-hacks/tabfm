@@ -109,7 +109,7 @@ void SUBPROC_Paste(DATA *data) {
             unsigned int success = 0;
             SIE_FILE *new_file = Sie_FS_GetUniqueFile(file);
             char *dest = Sie_FS_GetPathByFile(new_file);
-            SetPBarData(data->pbar_gui_id, new_file, i + 1, data->total_files);
+            SetPBarData(data->pbar_gui_id, new_file, i, data->total_files);
             if (COPY_FILES) {
                 char *src = Sie_FS_GetPathByFile(file);
                 if (!Sie_FS_IsDir(src, &err)) { // file
@@ -124,11 +124,11 @@ void SUBPROC_Paste(DATA *data) {
             }
             mfree(dest);
             Sie_FS_DestroyFileElement(new_file);
+            SetPBarData(data->pbar_gui_id, new_file, i + 1, data->total_files);
         } else {
-            SetPBarData(data->pbar_gui_id, file, i + 1, data->total_files);
-
             char *dest = malloc(strlen(DIR_NAME) + strlen(file->file_name) + 1);
             sprintf(dest, "%s%s", DIR_NAME, file->file_name);
+            SetPBarData(data->pbar_gui_id, file, i, data->total_files);
             if (Sie_FS_FileExists(dest)) {
                 char msg[160];
                 sprintf(msg, "Replace file: %s?", file->file_name);
@@ -142,6 +142,7 @@ void SUBPROC_Paste(DATA *data) {
                 }
             }
             mfree(dest);
+            SetPBarData(data->pbar_gui_id, file, i + 1, data->total_files);
         }
         END:
         file = file->next;
