@@ -15,7 +15,7 @@ static const int minus11 = -11;
 static unsigned short maincsm_name_body[140];
 
 int MAIN_GUI_ID;
-int IN_PROGRESS;
+int OPERATION_FLAG;
 SIE_GUI_STACK *GUI_STACK;
 
 static void maincsm_oncreate(CSM_RAM *data) {

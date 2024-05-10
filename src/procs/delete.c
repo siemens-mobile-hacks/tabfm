@@ -4,6 +4,7 @@
 #include "../ipc.h"
 #include "../gui/gui.h"
 #include "../gui/tab.h"
+#include "../gui/ui/pbar.h"
 
 typedef struct {
     SIE_FILE *files;
@@ -12,7 +13,7 @@ typedef struct {
 } DATA;
 
 extern int MAIN_GUI_ID;
-extern int IN_PROGRESS;
+extern int OPERATION_FLAG;
 
 static DATA data;
 
@@ -31,8 +32,11 @@ void SUBPROC_Delete() {
     unsigned int err;
     SIE_FILE *file = data.files;
     while (file) {
-        SetPBarData(file, i);
+        if (OPERATION_FLAG == -1) {
+            break;
+        }
 
+        SetPBarData(file, i);
         char *path = Sie_FS_GetPathByFile(file);
         if (file->file_attr & SIE_FS_FA_DIRECTORY) {
             Sie_FS_DeleteDirRecursive(path, &err);
@@ -47,16 +51,16 @@ void SUBPROC_Delete() {
     Sie_GUI_CloseGUI(data.pbar_box_id);
     Sie_GUI_FocusGUI_Sync(MAIN_GUI_ID);
     IPC_Refresh(NULL);
-    IN_PROGRESS = 0;
+    OPERATION_FLAG = 0;
 }
 
 static void YesNo(int flag) {
     if (flag == 0) {
         data.total_files = Sie_FS_GetFilesCount(data.files);
-        data.pbar_box_id = ShowPBarBox(1, (int)"Deleting files...", NULL, 0, NULL);
+        data.pbar_box_id = ShowPBar((int)"Deleting files...");
         Sie_SubProc_Run(SUBPROC_Delete, NULL);
     } else {
-        IN_PROGRESS = 0;
+        OPERATION_FLAG = 0;
     }
 }
 
@@ -67,8 +71,8 @@ static void Focus(SIE_FILE *files) {
 
 void Delete(GUI *tab_gui) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-    if (!IN_PROGRESS) {
-        IN_PROGRESS = 1;
+    if (!OPERATION_FLAG) {
+        OPERATION_FLAG = 1;
 
         SIE_FILE *files = NULL;
         if (tab_data->selected_files) {
@@ -85,7 +89,7 @@ void Delete(GUI *tab_gui) {
             CloseChildrenGUI();
             Sie_GUI_FocusGUI_Async(&tmr, &focus_data);
         } else {
-            IN_PROGRESS = 0;
+            OPERATION_FLAG = 0;
         }
     }
 }

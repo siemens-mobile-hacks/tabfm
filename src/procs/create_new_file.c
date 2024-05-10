@@ -12,7 +12,7 @@ typedef struct {
 } DATA;
 
 extern int MAIN_GUI_ID;
-extern int IN_PROGRESS;
+extern int OPERATION_FLAG;
 
 void SUBPROC_CreateNewFile(DATA *data) {
     unsigned int err = 0;
@@ -38,7 +38,7 @@ void SUBPROC_CreateNewFile(DATA *data) {
     }
     Sie_FS_DestroyFileElement(data->src_file);
     Sie_FS_DestroyFileElement(dest_file);
-    IN_PROGRESS = 0;
+    OPERATION_FLAG = 0;
 }
 
 static void Focus(DATA *data) {
@@ -48,8 +48,8 @@ static void Focus(DATA *data) {
 
 void CreateNewFile(GUI *tab_gui, SIE_FILE *file) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-    if (!IN_PROGRESS) {
-        IN_PROGRESS = 1;
+    if (!OPERATION_FLAG) {
+        OPERATION_FLAG = 1;
         static GBSTMR tmr;
         static DATA data = {};
         static SIE_GUI_FOCUS_DATA focus_data;

@@ -13,7 +13,7 @@
 #define SOFTKEY_BACK    {0x0001, 0x0000, (int)LGP_NULL}
 #define SOFTKEY_MIDDLE  {0x003D, 0x0000, (int)LGP_DOIT_PIC}
 
-extern int IN_PROGRESS;
+extern int OPERATION_FLAG;
 extern SIE_GUI_STACK *GUI_STACK;
 
 static int ICON_HEADER = 951;
@@ -85,7 +85,7 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     int item_n = GetCurMenuItem(gui);
 
     if (msg->keys == 0x18) { // options
-        if (!IN_PROGRESS) {
+        if (!OPERATION_FLAG) {
             GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Options(gui));
         }
     } else if (msg->keys == 0x3D) { // enter

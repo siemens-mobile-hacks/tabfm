@@ -8,13 +8,13 @@
 #define MOVE 0x01
 
 extern int MAIN_GUI_ID;
-extern int IN_PROGRESS;
+extern int OPERATION_FLAG;
 extern SIE_FILE *COPY_FILES, *MOVE_FILES;
 
 void CopyMove(GUI *tab_gui, int t) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-    if (!IN_PROGRESS) {
-        IN_PROGRESS = 1;
+    if (!OPERATION_FLAG) {
+        OPERATION_FLAG = 1;
 
         Sie_FS_DestroyFiles(COPY_FILES);
         Sie_FS_DestroyFiles(MOVE_FILES);
@@ -36,7 +36,7 @@ void CopyMove(GUI *tab_gui, int t) {
             }
         }
         IPC_Refresh(NULL);
-        IN_PROGRESS = 0;
+        OPERATION_FLAG = 0;
     }
 }
 
