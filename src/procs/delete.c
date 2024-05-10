@@ -9,23 +9,13 @@
 typedef struct {
     SIE_FILE *files;
     unsigned int total_files;
-    int pbar_box_id;
+    int pbar_gui_id;
 } DATA;
 
 extern int MAIN_GUI_ID;
 extern int OPERATION_FLAG;
 
 static DATA data;
-
-static void SetPBarData(SIE_FILE *file, int i) {
-    WSHDR *ws = AllocWS(192);
-    WSHDR *file_name_ws = AllocWS(128);
-    float percent = (float)(i + 1) / (float)data.total_files;
-    str_2ws(file_name_ws, file->file_name, 127);
-    wsprintf(ws, "%d/%d\n%w", i + 1, data.total_files, file_name_ws);
-    IPC_SetPBarData(data.pbar_box_id, (int)(100 * percent), ws);
-    FreeWS(file_name_ws);
-}
 
 void SUBPROC_Delete() {
     int i = 0;
@@ -36,7 +26,7 @@ void SUBPROC_Delete() {
             break;
         }
 
-        SetPBarData(file, i);
+        SetPBarData(data.pbar_gui_id, file, i + 1, data.total_files);
         char *path = Sie_FS_GetPathByFile(file);
         if (file->file_attr & SIE_FS_FA_DIRECTORY) {
             Sie_FS_DeleteDirRecursive(path, &err);
@@ -48,16 +38,16 @@ void SUBPROC_Delete() {
         file = file->next;
         i++;
     }
-    Sie_GUI_CloseGUI(data.pbar_box_id);
+    Sie_GUI_CloseGUI(data.pbar_gui_id);
     Sie_GUI_FocusGUI_Sync(MAIN_GUI_ID);
-    IPC_Refresh(NULL);
+    IPC_Refresh(-1, NULL);
     OPERATION_FLAG = 0;
 }
 
 static void YesNo(int flag) {
     if (flag == 0) {
         data.total_files = Sie_FS_GetFilesCount(data.files);
-        data.pbar_box_id = ShowPBar((int)"Deleting files...");
+        data.pbar_gui_id = ShowPBar((int)"Deleting files...");
         Sie_SubProc_Run(SUBPROC_Delete, NULL);
     } else {
         OPERATION_FLAG = 0;

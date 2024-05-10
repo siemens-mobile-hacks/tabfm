@@ -13,6 +13,6 @@ enum {
     IPC_SETPBARTEXT,
 };
 
-void IPC_Refresh(const char *file_name);
+void IPC_Refresh(int tab_n, const char *file_name);
 void IPC_SetPBarData(int gui_id, int value, const WSHDR *ws);
 

@@ -35,7 +35,8 @@ static const MENUITEM_DESC MENU_ITEMS[MAX_ITEMS] = {
 };
 
 void Paste_Proc(GUI *gui) {
-
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    Paste(tab_gui);
 }
 
 void Rename_Proc(GUI *gui) {

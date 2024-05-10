@@ -119,6 +119,9 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
     } else {
         if (msg->gbsmsg->msg == KEY_DOWN || msg->gbsmsg->msg == LONG_PRESS) {
             switch (msg->gbsmsg->submess) {
+                case GREEN_BUTTON:
+                    Paste(gui);
+                    break;
                 case '*':
                     ToggleMark(gui);
                     RefreshGUI();

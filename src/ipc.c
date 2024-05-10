@@ -9,9 +9,10 @@ static void Send(int submess, void *data) {
     GBS_SendMessage(MMI_CEPID, MSG_IPC, submess, &ipc);
 }
 
-void IPC_Refresh(const char *file_name) {
+void IPC_Refresh(int tab_n, const char *file_name) {
     static IPC_DATA ipc_data = {};
-    ipc_data.param0 = (void*)file_name;
+    ipc_data.param0 = (void*)tab_n;
+    ipc_data.param1 = (void*)file_name;
     Send(IPC_REFRESH, &ipc_data);
 }
 

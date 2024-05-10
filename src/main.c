@@ -43,9 +43,14 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
         if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
             if (msg->submess == IPC_REFRESH) {
                 MutexLock(&csm->mtx);
+
                 IPC_DATA *ipc_data = ipc->data;
-                const char *file_name = ipc_data->param0;
-                GUI *tab_gui = GetGuiByTab(csm->gui, GetCursorTab(csm->gui));
+                int tab_n = (int)ipc_data->param0;
+                const char *file_name = ipc_data->param1;
+                if (tab_n == -1) {
+                    tab_n = GetCursorTab(csm->gui);
+                }
+                GUI *tab_gui = GetGuiByTab(csm->gui, tab_n);
                 TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
                 Navigate(tab_gui, tab_data->path->path);
                 RefreshTabByFileName(tab_gui, file_name);
