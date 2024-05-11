@@ -5,6 +5,7 @@
 #include "../gui/gui.h"
 #include "../gui/tab.h"
 #include "../gui/ui/pbar.h"
+#include "../gui/ui/error.h"
 
 typedef struct {
     SIE_FILE *files;
@@ -19,19 +20,22 @@ static DATA data;
 
 void SUBPROC_Delete() {
     int i = 0;
-    unsigned int err;
+    unsigned int err = 0;
+    unsigned int success;
     SIE_FILE *file = data.files;
     while (file) {
         if (OPERATION_FLAG == -1) {
             break;
         }
-
-        SetPBarData(data.pbar_gui_id, file, i, data.total_files);
         char *path = Sie_FS_GetPathByFile(file);
+        SetPBarData(data.pbar_gui_id, file, i, data.total_files);
         if (file->file_attr & SIE_FS_FA_DIRECTORY) {
-            Sie_FS_DeleteDirRecursive(path, &err);
+            success = Sie_FS_DeleteDirRecursive(path, &err);
         } else {
-            Sie_FS_DeleteFile(path, &err);
+            success = Sie_FS_DeleteFile(path, &err);
+        }
+        if (!success) {
+            ShowError(err, file->file_name);
         }
         mfree(path);
         SetPBarData(data.pbar_gui_id, file, i + 1, data.total_files);

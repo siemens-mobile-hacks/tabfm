@@ -5,6 +5,7 @@
 #include "../gui/gui.h"
 #include "../gui/tab.h"
 #include "../gui/ui/pbar.h"
+#include "../gui/ui/error.h"
 
 extern int MAIN_GUI_ID;
 extern int OPERATION_FLAG;
@@ -29,20 +30,23 @@ inline static SIE_FILE *GetFiles() {
 static int GetCancelFlag() { return OPERATION_FLAG == -1;}
 
 static unsigned int CopyMoveFile(SIE_FILE *src_file, const char *dest) {
-    unsigned int result = 0;
     unsigned int err = 0;
+    unsigned int success = 0;
     char *src = Sie_FS_GetPathByFile(src_file);
     if (COPY_FILES) {
         if (!Sie_FS_IsDir(src, &err)) {
-            result = (Sie_FS_CopyFile(src, dest, &err) >= 0);
+            success = (Sie_FS_CopyFile(src, dest, &err) >= 0);
         } else {
-            result = Sie_FS_CopyDir(src, dest, &err, GetCancelFlag);
+            success = Sie_FS_CopyDir(src, dest, &err, GetCancelFlag);
         }
     } else {
-        result = Sie_FS_MoveFile(src, dest, &err, GetCancelFlag);
+        success = Sie_FS_MoveFile(src, dest, &err, GetCancelFlag);
     }
     mfree(src);
-    return result;
+    if (!success) {
+        ShowError(err, src_file->file_name);
+    }
+    return success;
 }
 
 static SIE_FILE *GetUniqueFile(SIE_FILE *file, const char *dir) {
@@ -57,7 +61,7 @@ static SIE_FILE *GetUniqueFile(SIE_FILE *file, const char *dir) {
 }
 
 static void YesNo(int flag) {
-    unsigned int err;
+    unsigned int err = 0;
     unsigned int success = 0;
     SIE_FILE *new_file = Sie_FS_CopyFileElement(WAIT_FILE);
     if (flag == 0) { // Replace
@@ -105,21 +109,10 @@ void SUBPROC_Paste(DATA *data) {
             goto END;
         }
         if (strcmpi(file->dir_name, DIR_NAME) == 0) { // current dir
-            unsigned int err = 0;
-            unsigned int success = 0;
             SIE_FILE *new_file = Sie_FS_GetUniqueFile(file);
             char *dest = Sie_FS_GetPathByFile(new_file);
             SetPBarData(data->pbar_gui_id, new_file, i, data->total_files);
-            if (COPY_FILES) {
-                char *src = Sie_FS_GetPathByFile(file);
-                if (!Sie_FS_IsDir(src, &err)) { // file
-                    success = (Sie_FS_CopyFile(src, dest, &err) >= 0);
-                } else {
-                    success = Sie_FS_CopyDir(src, dest, &err, GetCancelFlag);
-                }
-                mfree(src);
-            }
-            if (success) {
+            if (CopyMoveFile(file, dest)) {
                 strcpy(DEST_FILE_NAME, new_file->file_name);
             }
             mfree(dest);
@@ -131,7 +124,7 @@ void SUBPROC_Paste(DATA *data) {
             SetPBarData(data->pbar_gui_id, file, i, data->total_files);
             if (Sie_FS_FileExists(dest)) {
                 char msg[160];
-                sprintf(msg, "Replace file: %s?", file->file_name);
+                sprintf(msg, "Replace file %s?", file->file_name);
                 MsgBoxYesNo(1, (int)msg, YesNo);
                 WAIT_FLAG = 1;
                 WAIT_FILE = file;
