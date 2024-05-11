@@ -4,9 +4,6 @@
 #include "../gui.h"
 #include "../../ipc.h"
 
-#define SOFTKEY_SAVE   {0x001A, 0x0000, (int)"Save"}
-#define SOFTKEY_MIDDLE {0x001A, 0x0000, LGP_SAVE_PIC}
-
 static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"Rename",LGP_NULL};
 
 static const SOFTKEYSTAB SOFTKEYS_TAB = {
@@ -43,9 +40,9 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
 }
 
 static void GHook(GUI *gui, int cmd) {
-    static SOFTKEY_DESC sk_save = SOFTKEY_SAVE;
-    static SOFTKEY_DESC sk_middle = SOFTKEY_MIDDLE;
     if (cmd == TI_CMD_REDRAW) {
+        static SOFTKEY_DESC sk_save ={0x001A, 0x0000, (int)"Save"};
+        static SOFTKEY_DESC sk_middle = {0x001A, 0x0000, LGP_SAVE_PIC};
         SetSoftKey(gui, &sk_save, SET_LEFT_SOFTKEY);
         SetSoftKey(gui, &sk_middle, SET_MIDDLE_SOFTKEY);
     }

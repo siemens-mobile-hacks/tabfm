@@ -19,7 +19,7 @@ extern SIE_GUI_STACK *GUI_STACK;
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
 
-static const int ICONS[] = {ICON_DIR, ICON_UNK, ICON_BLANK, ICON_MARK};
+static const int ICONS[] = {ICON_DIR, ICON_UNK, ICON_BLANK, ICON_CHECK};
 
 static const int SOFTKEYS[] = {0, 1, 2};
 

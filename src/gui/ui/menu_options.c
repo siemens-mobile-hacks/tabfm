@@ -3,10 +3,11 @@
 #include "../tab.h"
 #include "../icons.h"
 #include "../../procs/procs.h"
+#include "menu_view.h"
 #include "menu_create.h"
 #include "menu_operations.h"
 
-#define MAX_ITEMS 5
+#define MAX_ITEMS 6
 
 enum MenuItems {
     MENU_ITEM_CREATE,
@@ -14,6 +15,7 @@ enum MenuItems {
     MENU_ITEM_UNMARK,
     MENU_ITEM_UNMARK_ALL,
     MENU_ITEM_OPERATIONS,
+    MENU_ITEM_VIEW,
 };
 
 extern SIE_GUI_STACK *GUI_STACK;
@@ -33,6 +35,8 @@ static const MENUITEM_DESC MENU_ITEMS[MAX_ITEMS] = {
          MENU_FLAG3, MENU_FLAG2},
         {ICONS, (int)"Operations", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
+        {ICONS, (int)"View", LGP_NULL, 0, NULL,
+                MENU_FLAG3, MENU_FLAG2},
 };
 
 void Create_Proc(GUI *gui) {
@@ -63,12 +67,18 @@ void Operations_Proc(GUI *gui) {
     GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_Operations(tab_gui));
 }
 
+void View_Proc(GUI *gui) {
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_View(tab_gui));
+}
+
 static const MENUPROCS_DESC MENU_PROCS[MAX_ITEMS] = {
         Create_Proc,
         Mark_Proc,
         UnMark_Proc,
         UnMarkAll_Proc,
         Operations_Proc,
+        View_Proc,
 };
 
 static const int SOFTKEYS[] = {0, 1, 2};

@@ -18,6 +18,8 @@ int MAIN_GUI_ID;
 int OPERATION_FLAG;
 SIE_GUI_STACK *GUI_STACK;
 
+int SHOW_HIDDEN_FILES = 1;
+
 static void maincsm_oncreate(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     csm->csm.state = 0;
