@@ -26,9 +26,9 @@ static HEADER_DESC HEADER_D = {{0, 0, 0, 0}, NULL, (int)"View", LGP_NULL};
 static int ICONS[] = {ICON_BLANK, RADIO_UNCHECKED, RADIO_CHECKED, ICON_UNCHECK, ICON_CHECK};
 
 static const MENUITEM_DESC MENU_ITEMS[MAX_ITEMS] = {
-        {ICONS, (int)"Sort by name ASC", LGP_NULL, 0, NULL,
+        {ICONS, (int)"Sort by name ascending", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
-        {ICONS, (int)"Sort by name DESC", LGP_NULL, 0, NULL,
+        {ICONS, (int)"Sort by name descending", LGP_NULL, 0, NULL,
                 MENU_FLAG3, MENU_FLAG2},
         {ICONS, (int)"Show hidden files", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
