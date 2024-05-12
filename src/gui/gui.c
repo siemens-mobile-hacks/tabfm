@@ -2,12 +2,14 @@
 #include <string.h>
 #include <sie/sie.h>
 #include "tab.h"
+#include "gui.h"
 #include "icons.h"
 
 extern int MAIN_GUI_ID;
 extern SIE_GUI_STACK *GUI_STACK;
 
 int SHOW_HIDDEN_FILES = 1;
+int ORDERING = ORDERING_BY_NAME_ASC;
 SIE_FILE *COPY_FILES, *MOVE_FILES;
 
 static const int ICONS[][4] = {

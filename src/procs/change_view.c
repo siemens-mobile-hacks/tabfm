@@ -3,9 +3,10 @@
 #include "../gui/gui.h"
 
 extern int MAIN_GUI_ID;
-extern int SHOW_HIDDEN_FILES;
+extern int ORDERING, SHOW_HIDDEN_FILES;
 
-void ChangeView(GUI *tab_gui, int show_hidden_files) {
+void ChangeView(GUI *tab_gui, int ordering, int show_hidden_files) {
+    ORDERING = ordering;
     SHOW_HIDDEN_FILES = show_hidden_files;
     CloseChildrenGUI();
     FocusGUI(MAIN_GUI_ID);

@@ -2,10 +2,11 @@
 #include <sie/sie.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../procs/procs.h"
+#include "gui.h"
 #include "tab.h"
 #include "icons.h"
 #include "ui/menu_options.h"
-#include "../procs/procs.h"
 
 #define LGP_BACK "Back"
 #define LGP_EXIT "Exit"
@@ -16,7 +17,7 @@
 extern int OPERATION_FLAG;
 extern SIE_GUI_STACK *GUI_STACK;
 
-extern int SHOW_HIDDEN_FILES;
+extern int ORDERING, SHOW_HIDDEN_FILES;
 
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
@@ -34,6 +35,27 @@ static const SOFTKEYSTAB SOFTKEYS_TAB = {
         SOFTKEY_D, 0,
 };
 
+void SetFiles(GUI *tab_gui, const char *path) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+    char *mask = malloc(strlen(path) + 2 + 1);
+    sprintf(mask, "%s*", path);
+    tab_data->files = Sie_FS_FindFiles(mask);
+    mfree(mask);
+    if (!SHOW_HIDDEN_FILES) {
+        tab_data->files = Sie_FS_ExcludeFilesByFileAttr(tab_data->files, SIE_FS_FA_HIDDEN);
+    }
+    switch (ORDERING) {
+        case ORDERING_BY_NAME_ASC:
+            tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
+            break;
+        case ORDERING_BY_NAME_DESC:
+            tab_data->files = Sie_FS_SortFilesByNameDesc(tab_data->files, 1);
+            break;
+        default:
+            tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
+    }
+}
+
 void RefreshHeader(GUI *tab_gui) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
 
@@ -48,17 +70,7 @@ void Navigate(GUI *tab_gui, const char *path) {
     Sie_FS_DestroyFiles(tab_data->files);
     Sie_FS_DestroyFiles(tab_data->selected_files);
     tab_data->selected_files = NULL;
-
-    char *mask = malloc(strlen(path) + 2 + 1);
-    sprintf(mask, "%s*", path);
-    tab_data->files = Sie_FS_FindFiles(mask);
-    if (!SHOW_HIDDEN_FILES) {
-        tab_data->files = Sie_FS_ExcludeFilesByFileAttr(tab_data->files, SIE_FS_FA_HIDDEN);
-    }
-    tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
-    tab_data->files = tab_data->files;
-    mfree(mask);
-
+    SetFiles(tab_gui, path);
     RefreshHeader(tab_gui);
 }
 
@@ -228,17 +240,15 @@ void *CreateTabGUI(int tab_n) {
 
     SetHeaderToMenu(tab_gui, header_desc, malloc_adr());
     SetMenuToGUI(tab_gui, &DESC);
+    MenuSetUserPointer(tab_gui, tab_data);
 
     char str[32];
     sprintf(str, "%d:", (tab_n < 3) ? tab_n : 4);
     tab_data->path = Path_Push(NULL, str, 0);
-    sprintf(str, "%s*", tab_data->path->path);
-    tab_data->files = Sie_FS_FindFiles(str);
-    tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
+    SetFiles(tab_gui, tab_data->path->path);
+
     unsigned int count = Sie_FS_GetFilesCount(tab_data->files);
     SetMenuItemCount(tab_gui, (int)count);
-
-    MenuSetUserPointer(tab_gui, tab_data);
     RefreshHeader(tab_gui);
 
     return tab_gui;
