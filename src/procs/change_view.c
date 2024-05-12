@@ -9,5 +9,5 @@ void ChangeView(GUI *tab_gui, int show_hidden_files) {
     SHOW_HIDDEN_FILES = show_hidden_files;
     CloseChildrenGUI();
     FocusGUI(MAIN_GUI_ID);
-    IPC_Refresh(-1, NULL);
+    for (int i = 0; i < 4; i++) IPC_Refresh(i, NULL);
 }

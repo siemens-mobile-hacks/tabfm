@@ -7,6 +7,7 @@
 extern int MAIN_GUI_ID;
 extern SIE_GUI_STACK *GUI_STACK;
 
+int SHOW_HIDDEN_FILES = 1;
 SIE_FILE *COPY_FILES, *MOVE_FILES;
 
 static const int ICONS[][4] = {

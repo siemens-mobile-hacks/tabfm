@@ -18,8 +18,6 @@ int MAIN_GUI_ID;
 int OPERATION_FLAG;
 SIE_GUI_STACK *GUI_STACK;
 
-int SHOW_HIDDEN_FILES = 1;
-
 static void maincsm_oncreate(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     csm->csm.state = 0;
@@ -43,9 +41,9 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     } else if (msg->msg == MSG_IPC) {
         IPC_REQ *ipc = (IPC_REQ*)msg->data0;
         if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
+            IPC_DATA *ipc_data = ipc->data;
+            MutexLock(&csm->mtx);
             if (msg->submess == IPC_REFRESH) {
-                MutexLock(&csm->mtx);
-                IPC_DATA *ipc_data = ipc->data;
                 int tab_n = (int)ipc_data->param0;
                 const char *file_name = ipc_data->param1;
                 if (tab_n == -1) {
@@ -55,10 +53,7 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
                 TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
                 Navigate(tab_gui, tab_data->path->path);
                 RefreshTabByFileName(tab_gui, file_name);
-                MutexUnlock(&csm->mtx);
             } else if(msg->submess == IPC_SETPBARTEXT) {
-                MutexLock(&csm->mtx);
-                IPC_DATA *ipc_data = ipc->data;
                 int gui_id = (int)ipc_data->param0;
                 if (IsGuiOnTop(gui_id)) {
                     if (ipc_data->param1) {
@@ -68,8 +63,10 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
                         SetPBarText(gui_id, ipc_data->param2);
                     }
                 }
-                MutexUnlock(&csm->mtx);
             }
+            mfree(ipc->data);
+            mfree(ipc);
+            MutexUnlock(&csm->mtx);
         }
     }
     return 1;

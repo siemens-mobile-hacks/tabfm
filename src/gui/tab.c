@@ -16,6 +16,8 @@
 extern int OPERATION_FLAG;
 extern SIE_GUI_STACK *GUI_STACK;
 
+extern int SHOW_HIDDEN_FILES;
+
 static int ICON_HEADER = 951;
 static HEADER_DESC HEADER_D={{0, 0, 0, 0}, &ICON_HEADER, LGP_NULL, LGP_NULL};
 
@@ -50,6 +52,9 @@ void Navigate(GUI *tab_gui, const char *path) {
     char *mask = malloc(strlen(path) + 2 + 1);
     sprintf(mask, "%s*", path);
     tab_data->files = Sie_FS_FindFiles(mask);
+    if (!SHOW_HIDDEN_FILES) {
+        tab_data->files = Sie_FS_ExcludeFilesByFileAttr(tab_data->files, SIE_FS_FA_HIDDEN);
+    }
     tab_data->files = Sie_FS_SortFilesByNameAsc(tab_data->files, 1);
     tab_data->files = tab_data->files;
     mfree(mask);
@@ -170,8 +175,8 @@ static void ItemProc(void *gui, int item_n, void *data) {
     void *item = AllocMenuItem(gui);
     WSHDR *ws = AllocMenuWS(gui, 256);
     SIE_FILE *file = Sie_FS_GetFileByID(tab_data->files, item_n);
-    str_2ws(ws, file->file_name, 255);
 
+    str_2ws(ws, file->file_name, 255);
     if (Sie_FS_ContainsFile(tab_data->selected_files, file)) { // marked
         SetMenuItemIconArray(gui, item, &ICONS[3]);
     } else {
