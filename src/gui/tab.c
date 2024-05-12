@@ -62,20 +62,19 @@ void Navigate(GUI *tab_gui, const char *path) {
     RefreshHeader(tab_gui);
 }
 
-void RefreshTab(GUI *tab_gui, int item_n) {
+void RefreshTab(GUI *tab_gui, int item_n, const char *file_name) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-    unsigned int items_count = (tab_data->files) ? Sie_FS_GetFilesCount(tab_data->files) : 0;
-    Menu_SetItemCountDyn(tab_gui, (int)items_count);
-    UpdateMenuCursorItem(tab_gui, item_n);
-}
-
-void RefreshTabByFileName(GUI *tab_gui, const char *file_name) {
-    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-    int item_n = 0;
     unsigned int items_count = 0;
     if (tab_data->files) {
-        item_n = (file_name) ? Sie_FS_GetIDByFileName(tab_data->files, file_name) : GetCurMenuItem(tab_gui);
+        if (file_name) {
+            item_n = Sie_FS_GetIDByFileName(tab_data->files, file_name);
+        } else if (item_n < 0) {
+            item_n = GetCurMenuItem(tab_gui);
+        }
         items_count = Sie_FS_GetFilesCount(tab_data->files);
+    }
+    if (item_n < 0) {
+        item_n = 0;
     }
     if (item_n > items_count - 1) {
         item_n = (int)items_count - 1;
@@ -104,7 +103,7 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
                 if (file->file_attr & SIE_FS_FA_DIRECTORY) {
                     tab_data->path = Path_Push(tab_data->path, path, item_n);
                     Navigate(gui, tab_data->path->path);
-                    RefreshTab(gui, 0);
+                    RefreshTab(gui, 0, NULL);
                 } else {
                     Sie_Exec_File(path);
                 }
@@ -116,7 +115,7 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
             PATH *path = Path_Pop(tab_data->path);
             tab_data->path = path;
             Navigate(gui, tab_data->path->path);
-            RefreshTab(gui, tab_data->path->item_n);
+            RefreshTab(gui, tab_data->path->item_n, NULL);
             return -1;
         } else {
             return 1;

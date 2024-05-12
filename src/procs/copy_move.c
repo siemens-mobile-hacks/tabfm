@@ -35,7 +35,7 @@ void CopyMove(GUI *tab_gui, int t) {
                 MOVE_FILES = files;
             }
         }
-        IPC_Refresh(-1, NULL);
+        IPC_Refresh(-1, -1, NULL);
         OPERATION_FLAG = 0;
     }
 }

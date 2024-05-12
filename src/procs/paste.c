@@ -145,10 +145,10 @@ void SUBPROC_Paste(DATA *data) {
     Sie_FS_DestroyFiles(MOVE_FILES);
     COPY_FILES = MOVE_FILES = NULL;
 
-    IPC_Refresh(data->src_tab_n, NULL);
+    IPC_Refresh(data->src_tab_n, -1, NULL);
     Sie_GUI_CloseGUI(data->pbar_gui_id);
     Sie_GUI_FocusGUI_Sync(MAIN_GUI_ID);
-    IPC_Refresh(-1, DEST_FILE_NAME);
+    IPC_Refresh(-1, -1, DEST_FILE_NAME);
     WAIT_FLAG = 0;
     OPERATION_FLAG = 0;
 }

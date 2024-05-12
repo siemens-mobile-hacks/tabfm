@@ -34,7 +34,7 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
             } else {
                 if (sys_mkdir(path, &err)) {
                     CloseChildrenGUI();
-                    IPC_Refresh(-1, file_name);
+                    IPC_Refresh(-1, -1, file_name);
                 } else {
                     MsgBoxError(1, (int)"Create directory error!");
                     res = -1;

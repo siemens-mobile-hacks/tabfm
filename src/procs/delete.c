@@ -45,7 +45,7 @@ void SUBPROC_Delete() {
     }
     Sie_GUI_CloseGUI(data.pbar_gui_id);
     Sie_GUI_FocusGUI_Sync(MAIN_GUI_ID);
-    IPC_Refresh(-1, NULL);
+    IPC_Refresh(-1, -1, NULL);
     OPERATION_FLAG = 0;
 }
 

@@ -12,5 +12,4 @@ typedef struct {
 
 void *CreateTabGUI(int tab_n);
 void Navigate(GUI *tab_gui, const char *path);
-void RefreshTab(GUI *tab_gui, int item_n);
-void RefreshTabByFileName(GUI *tab_gui, const char *file_name);
+void RefreshTab(GUI *tab_gui, int item_n, const char *file_name);

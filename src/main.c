@@ -45,14 +45,15 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
             MutexLock(&csm->mtx);
             if (msg->submess == IPC_REFRESH) {
                 int tab_n = (int)ipc_data->param0;
-                const char *file_name = ipc_data->param1;
+                int item_n = (int)ipc_data->param1;
+                const char *file_name = ipc_data->param2;
                 if (tab_n == -1) {
                     tab_n = GetCursorTab(csm->gui);
                 }
                 GUI *tab_gui = GetGuiByTab(csm->gui, tab_n);
                 TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
                 Navigate(tab_gui, tab_data->path->path);
-                RefreshTabByFileName(tab_gui, file_name);
+                RefreshTab(tab_gui, item_n, file_name);
             } else if(msg->submess == IPC_SETPBARTEXT) {
                 int gui_id = (int)ipc_data->param0;
                 if (IsGuiOnTop(gui_id)) {

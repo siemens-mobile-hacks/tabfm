@@ -10,10 +10,11 @@ static void Send(int submess, void *data) {
     GBS_SendMessage(MMI_CEPID, MSG_IPC, submess, ipc);
 }
 
-void IPC_Refresh(int tab_n, const char *file_name) {
+void IPC_Refresh(int tab_n, int item_n, const char *file_name) {
     IPC_DATA *ipc_data = malloc(sizeof(IPC_DATA));
     ipc_data->param0 = (void*)tab_n;
-    ipc_data->param1 = (void*)file_name;
+    ipc_data->param1 = (void*)item_n;
+    ipc_data->param2 = (void*)file_name;
     Send(IPC_REFRESH, ipc_data);
 }
 

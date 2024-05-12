@@ -33,7 +33,7 @@ void SUBPROC_CreateNewFile(DATA *data) {
         static char file_name[256];
         strcpy(file_name, dest_file->file_name);
         Sie_GUI_FocusGUI_Sync(MAIN_GUI_ID);
-        IPC_Refresh(-1, file_name);
+        IPC_Refresh(-1, -1, file_name);
     } else {
     }
     Sie_FS_DestroyFileElement(data->src_file);

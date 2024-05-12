@@ -27,7 +27,7 @@ static int OnKey(GUI *gui, GUI_MSG *msg) {
             sprintf(new_name, "%s%s", tab_data->current_file->dir_name, file_name);
             if (sys_rename(old_name, new_name, &err)) {
                 CloseChildrenGUI();
-                IPC_Refresh(-1, file_name);
+                IPC_Refresh(-1, -1, file_name);
             } else {
                 MsgBoxError(1, (int)"Rename error!");
                 res = -1;
