@@ -130,6 +130,7 @@ int CreateMenu_Options(GUI *tab_gui) {
         to_remove[++items_count] = MENU_ITEM_UNMARK;
         to_remove[++items_count] = MENU_ITEM_UNMARK_ALL;
         to_remove[++items_count] = MENU_ITEM_OPERATIONS;
+        to_remove[++items_count] = MENU_ITEM_VIEW;
     }
     to_remove[0] = items_count;
 
