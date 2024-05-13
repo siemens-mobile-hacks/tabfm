@@ -3,6 +3,7 @@
 #include "ipc.h"
 #include "gui/gui.h"
 #include "gui/tab.h"
+#include "config_loader.h"
 
 typedef struct {
     CSM_RAM csm;
@@ -10,6 +11,8 @@ typedef struct {
     MUTEX mtx;
     int gui_id;
 } MAIN_CSM;
+
+extern char CFG_PATH[];
 
 static const int minus11 = -11;
 static unsigned short maincsm_name_body[140];
@@ -69,6 +72,11 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
             mfree(ipc);
             MutexUnlock(&csm->mtx);
         }
+    } else if (msg->msg == MSG_RECONFIGURE_REQ) {
+        if (strcmpi(CFG_PATH, (char*)msg->data0) == 0) {
+            ShowMSG(1, (int)"TabFM config updated!");
+            InitConfig();
+        }
     }
     return 1;
 }
@@ -107,6 +115,7 @@ void UpdateCSMname(void) {
 
 int main() {
     MAIN_CSM main_csm;
+    InitConfig();
     LockSched();
     UpdateCSMname();
     CreateCSM(&MAINCSM.maincsm, &main_csm, 0);
