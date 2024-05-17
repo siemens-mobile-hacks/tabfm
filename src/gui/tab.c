@@ -61,7 +61,7 @@ void RefreshHeader(GUI *tab_gui) {
 
     WSHDR *ws = AllocWS(256);
     str_2ws(ws, tab_data->path->path, 256);
-    SetHeaderText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
+    SetHeaderScrollText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
 }
 
 void Navigate(GUI *tab_gui, const char *path) {
@@ -71,7 +71,6 @@ void Navigate(GUI *tab_gui, const char *path) {
     Sie_FS_DestroyFiles(tab_data->selected_files);
     tab_data->selected_files = NULL;
     SetFiles(tab_gui, path);
-    RefreshHeader(tab_gui);
 }
 
 void RefreshTab(GUI *tab_gui, int item_n, const char *file_name) {
@@ -165,6 +164,7 @@ static void GHook(GUI *gui, int cmd) {
                 tab_data->current_file = Sie_FS_CopyFileElement(file);
             }
         }
+        RefreshHeader(gui);
         sk_back.lgp_id = (tab_data->path->prev) ? (int)LGP_BACK : (int)LGP_EXIT;
         sk_middle.lgp_id = (tab_data->selected_files) ? LGP_CHANGE_PIC : LGP_DOIT_PIC;
         SetMenuSoftKey(gui, &sk_back, SET_RIGHT_SOFTKEY);
@@ -238,8 +238,8 @@ void *CreateTabGUI(int tab_n) {
     GUI *tab_gui = GetMenuGUI(malloc_adr(), mfree_adr());
     Sie_GUI_InitHeader(header_desc);
 
-    SetHeaderToMenu(tab_gui, header_desc, malloc_adr());
     SetMenuToGUI(tab_gui, &DESC);
+    SetHeaderToMenu(tab_gui, header_desc, malloc_adr());
     MenuSetUserPointer(tab_gui, tab_data);
 
     char str[32];
@@ -249,7 +249,6 @@ void *CreateTabGUI(int tab_n) {
 
     unsigned int count = Sie_FS_GetFilesCount(tab_data->files);
     SetMenuItemCount(tab_gui, (int)count);
-    RefreshHeader(tab_gui);
 
     return tab_gui;
 }
