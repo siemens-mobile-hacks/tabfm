@@ -196,8 +196,6 @@ static void GHook(GUI *gui, int cmd) {
     }
 }
 
-static void Locret() {}
-
 static void ItemProc(void *gui, int item_n, void *data) {
     TAB_DATA *tab_data = (TAB_DATA*)data;
 
@@ -238,7 +236,7 @@ static const MENU_DESC DESC = {
         8,
         OnKey,
         GHook,
-        Locret,
+        NULL,
         SOFTKEYS,
         &SOFTKEYS_TAB,
         MENU_FLAGS_ENABLE_TEXT_SCROLLING | MENU_FLAGS_ENABLE_ICONS,
