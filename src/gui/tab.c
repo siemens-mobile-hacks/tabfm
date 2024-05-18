@@ -56,12 +56,30 @@ void SetFiles(GUI *tab_gui, const char *path) {
     }
 }
 
+inline uint8_t GetFileAttr(SIE_FILE *current_file, int attr, uint8_t c) {
+    return (current_file->file_attr & attr) ? c : '-';
+}
+
 void RefreshHeader(GUI *tab_gui) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
 
-    WSHDR *ws = AllocWS(256);
-    str_2ws(ws, tab_data->path->path, 256);
-    SetHeaderScrollText(GetHeaderPointer(tab_gui), ws, malloc_adr(), mfree_adr());
+    void *ma = malloc_adr();
+    void *mf = mfree_adr();
+    void *header = GetHeaderPointer(tab_gui);
+
+    WSHDR *title = AllocWS(256);
+    str_2ws(title, tab_data->path->path, 256);
+    SetHeaderScrollText(header, title, ma, mf);
+
+    if (tab_data->current_file) {
+        WSHDR *extra = AllocWS(16);
+        wsprintf(extra, "[%c%c%c%c]",
+                 GetFileAttr(tab_data->current_file, SIE_FS_FA_READONLY, 'r'),
+                 GetFileAttr(tab_data->current_file, SIE_FS_FA_HIDDEN, 'h'),
+                 GetFileAttr(tab_data->current_file, SIE_FS_FA_SYSTEM, 's'),
+                 GetFileAttr(tab_data->current_file, SIE_FS_FA_DIRECTORY, 'd'));
+        SetHeaderExtraText(header, extra, ma, mf);
+    }
 }
 
 void Navigate(GUI *tab_gui, const char *path) {
