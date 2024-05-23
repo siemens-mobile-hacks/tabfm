@@ -7,7 +7,7 @@
 #include "menu_create.h"
 #include "menu_operations.h"
 
-#define MAX_ITEMS 6
+#define MAX_ITEMS 8
 
 enum MenuItems {
     MENU_ITEM_CREATE,
@@ -16,6 +16,8 @@ enum MenuItems {
     MENU_ITEM_UNMARK_ALL,
     MENU_ITEM_OPERATIONS,
     MENU_ITEM_VIEW,
+    MENU_ITEM_SET_AS,
+    MENU_ITEM_SEND,
 };
 
 extern SIE_GUI_STACK *GUI_STACK;
@@ -36,6 +38,10 @@ static const MENUITEM_DESC MENU_ITEMS[MAX_ITEMS] = {
         {ICONS, (int)"Operations", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
         {ICONS, (int)"View", LGP_NULL, 0, NULL,
+                MENU_FLAG3, MENU_FLAG2},
+        {ICONS, (int)"Set as...", LGP_NULL, 0, NULL,
+                MENU_FLAG3, MENU_FLAG2},
+        {ICONS, (int)"Send...", LGP_NULL, 0, NULL,
                 MENU_FLAG3, MENU_FLAG2},
 };
 
@@ -72,6 +78,18 @@ void View_Proc(GUI *gui) {
     GUI_STACK = Sie_GUI_Stack_Add(GUI_STACK, CreateMenu_View(tab_gui));
 }
 
+void SetAs_Proc(GUI *gui) {
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GeneralFuncF1(1);
+    SetAs(tab_gui);
+}
+
+void Send_Proc(GUI *gui) {
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GeneralFuncF1(1);
+    Send(tab_gui);
+}
+
 static const MENUPROCS_DESC MENU_PROCS[MAX_ITEMS] = {
         Create_Proc,
         Mark_Proc,
@@ -79,6 +97,8 @@ static const MENUPROCS_DESC MENU_PROCS[MAX_ITEMS] = {
         UnMarkAll_Proc,
         Operations_Proc,
         View_Proc,
+        SetAs_Proc,
+        Send_Proc,
 };
 
 static const int SOFTKEYS[] = {0, 1, 2};
@@ -124,6 +144,11 @@ int CreateMenu_Options(GUI *tab_gui) {
         } else {
             to_remove[++items_count] = MENU_ITEM_UNMARK;
             to_remove[++items_count] = MENU_ITEM_UNMARK_ALL;
+            if (!Sie_Ext_MimeTypeCompare(tab_data->current_file->file_name, "image")) {
+                if (!Sie_Ext_MimeTypeCompare(tab_data->current_file->file_name, "audio")) {
+                    to_remove[++items_count] = MENU_ITEM_SET_AS;
+                }
+            }
         }
     } else {
         to_remove[++items_count] = MENU_ITEM_MARK;
@@ -131,6 +156,8 @@ int CreateMenu_Options(GUI *tab_gui) {
         to_remove[++items_count] = MENU_ITEM_UNMARK_ALL;
         to_remove[++items_count] = MENU_ITEM_OPERATIONS;
         to_remove[++items_count] = MENU_ITEM_VIEW;
+        to_remove[++items_count] = MENU_ITEM_SET_AS;
+        to_remove[++items_count] = MENU_ITEM_SEND;
     }
     to_remove[0] = items_count;
 
