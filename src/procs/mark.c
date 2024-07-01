@@ -49,6 +49,12 @@ void ToggleMark(GUI *tab_gui) {
     }
 }
 
+void MarkAll(GUI *tab_gui) {
+    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+    Sie_FS_DestroyFiles(tab_data->selected_files);
+    tab_data->selected_files = Sie_FS_CloneFiles(tab_data->files);
+}
+
 void UnMarkAll(GUI *tab_gui) {
     TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
     Sie_FS_DestroyFiles(tab_data->selected_files);

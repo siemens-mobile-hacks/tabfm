@@ -7,11 +7,12 @@
 #include "menu_create.h"
 #include "menu_operations.h"
 
-#define MAX_ITEMS 8
+#define MAX_ITEMS 9
 
 enum MenuItems {
     MENU_ITEM_CREATE,
     MENU_ITEM_MARK,
+    MENU_ITEM_MARK_ALL,
     MENU_ITEM_UNMARK,
     MENU_ITEM_UNMARK_ALL,
     MENU_ITEM_OPERATIONS,
@@ -30,6 +31,8 @@ static const MENUITEM_DESC MENU_ITEMS[MAX_ITEMS] = {
         {ICONS, (int)"Create", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
         {ICONS, (int)"Mark", LGP_NULL, 0, NULL,
+         MENU_FLAG3, MENU_FLAG2},
+        {ICONS, (int)"Mark all", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
         {ICONS, (int)"Unmark", LGP_NULL, 0, NULL,
          MENU_FLAG3, MENU_FLAG2},
@@ -54,6 +57,12 @@ void Mark_Proc(GUI *gui) {
     GUI *tab_gui = MenuGetUserPointer(gui);
     GeneralFuncF1(1);
     Mark(tab_gui);
+}
+
+void MarkAll_Proc(GUI *gui) {
+    GUI *tab_gui = MenuGetUserPointer(gui);
+    GeneralFuncF1(1);
+    MarkAll(tab_gui);
 }
 
 void UnMark_Proc(GUI *gui) {
@@ -93,6 +102,7 @@ void Send_Proc(GUI *gui) {
 static const MENUPROCS_DESC MENU_PROCS[MAX_ITEMS] = {
         Create_Proc,
         Mark_Proc,
+        MarkAll_Proc,
         UnMark_Proc,
         UnMarkAll_Proc,
         Operations_Proc,
@@ -141,6 +151,9 @@ int CreateMenu_Options(GUI *tab_gui) {
                 to_remove[++items_count] = MENU_ITEM_UNMARK;
                 to_remove[++items_count] = MENU_ITEM_UNMARK_ALL;
             }
+            if (Sie_FS_GetFilesCount(tab_data->files) == Sie_FS_GetFilesCount(tab_data->selected_files)) {
+                to_remove[++items_count] = MENU_ITEM_MARK_ALL;
+            }
         } else {
             to_remove[++items_count] = MENU_ITEM_UNMARK;
             to_remove[++items_count] = MENU_ITEM_UNMARK_ALL;
@@ -152,6 +165,7 @@ int CreateMenu_Options(GUI *tab_gui) {
         }
     } else {
         to_remove[++items_count] = MENU_ITEM_MARK;
+        to_remove[++items_count] = MENU_ITEM_MARK_ALL;
         to_remove[++items_count] = MENU_ITEM_UNMARK;
         to_remove[++items_count] = MENU_ITEM_UNMARK_ALL;
         to_remove[++items_count] = MENU_ITEM_OPERATIONS;
