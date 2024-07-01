@@ -6,6 +6,7 @@ typedef struct {
     void *param0;
     void *param1;
     void *param2;
+    int main_gui_id;
 } IPC_DATA;
 
 enum {

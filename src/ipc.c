@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include "ipc.h"
 
-static void Send(int submess, void *data) {
+extern int MAIN_GUI_ID;
+
+static void Send(int submess, IPC_DATA *data) {
     IPC_REQ *ipc = malloc(sizeof(IPC_REQ));
     ipc->name_to = IPC_NAME;
     ipc->name_from = IPC_NAME;
+    data->main_gui_id = MAIN_GUI_ID;
     ipc->data = data;
     GBS_SendMessage(MMI_CEPID, MSG_IPC, submess, ipc);
 }

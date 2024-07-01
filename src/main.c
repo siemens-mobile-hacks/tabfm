@@ -45,32 +45,34 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
         IPC_REQ *ipc = (IPC_REQ*)msg->data0;
         if (strcmpi(ipc->name_to, IPC_NAME) == 0) {
             IPC_DATA *ipc_data = ipc->data;
-            MutexLock(&csm->mtx);
-            if (msg->submess == IPC_REFRESH) {
-                int tab_n = (int)ipc_data->param0;
-                int item_n = (int)ipc_data->param1;
-                const char *file_name = ipc_data->param2;
-                if (tab_n == -1) {
-                    tab_n = GetCursorTab(csm->gui);
-                }
-                GUI *tab_gui = GetGuiByTab(csm->gui, tab_n);
-                TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
-                Navigate(tab_gui, tab_data->path->path);
-                RefreshTab(tab_gui, item_n, file_name);
-            } else if(msg->submess == IPC_SETPBARTEXT) {
-                int gui_id = (int)ipc_data->param0;
-                if (IsGuiOnTop(gui_id)) {
-                    if (ipc_data->param1) {
-                        SetPBarValue(gui_id, (int)ipc_data->param1);
+            if (ipc_data->main_gui_id == MAIN_GUI_ID) {
+                MutexLock(&csm->mtx);
+                if (msg->submess == IPC_REFRESH) {
+                    int tab_n = (int)ipc_data->param0;
+                    int item_n = (int)ipc_data->param1;
+                    const char *file_name = ipc_data->param2;
+                    if (tab_n == -1) {
+                        tab_n = GetCursorTab(csm->gui);
                     }
-                    if (ipc_data->param2) {
-                        SetPBarText(gui_id, ipc_data->param2);
+                    GUI *tab_gui = GetGuiByTab(csm->gui, tab_n);
+                    TAB_DATA *tab_data = MenuGetUserPointer(tab_gui);
+                    Navigate(tab_gui, tab_data->path->path);
+                    RefreshTab(tab_gui, item_n, file_name);
+                } else if (msg->submess == IPC_SETPBARTEXT) {
+                    int gui_id = (int)ipc_data->param0;
+                    if (IsGuiOnTop(gui_id)) {
+                        if (ipc_data->param1) {
+                            SetPBarValue(gui_id, (int)ipc_data->param1);
+                        }
+                        if (ipc_data->param2) {
+                            SetPBarText(gui_id, ipc_data->param2);
+                        }
                     }
                 }
+                mfree(ipc->data);
+                mfree(ipc);
+                MutexUnlock(&csm->mtx);
             }
-            mfree(ipc->data);
-            mfree(ipc);
-            MutexUnlock(&csm->mtx);
         }
     } else if (msg->msg == MSG_RECONFIGURE_REQ) {
         if (strcmpi(CFG_PATH, (char*)msg->data0) == 0) {
